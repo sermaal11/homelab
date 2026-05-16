@@ -57,7 +57,7 @@ Estado de migracion:
 | AdGuard Home | migrado y validado desde Portainer/GitHub | `adguard:/opt/adguardhome/conf`, `adguard:/opt/adguardhome/work` | `/data/homelab/adguard` | DNS `53`, UI/setup `3001` |
 | Monitoring | migrado y validado desde Portainer/GitHub | `prometheus:/prometheus`, `grafana:/var/lib/grafana` | `/data/homelab/prometheus/data`, `/data/homelab/grafana/data` | Prometheus targets, Grafana `3000` |
 | Passbolt | migrado y validado con admin inicial | datos antiguos apartados en `_backups/passbolt-pre-fresh` | `/data/homelab/passbolt` | DB, URL local, SMTP pendiente |
-| Portainer | datos extraidos y sincronizados, pendiente de recrear al final por CLI | volumen `portainer_portainer_data` | `/data/homelab/portainer/data` | login `9443`, stacks visibles |
+| Portainer | migrado y validado por CLI | volumen `portainer_portainer_data` | `/data/homelab/portainer/data` | login `9443`, stacks visibles |
 
 Datos sincronizados en `/data/homelab`:
 
@@ -85,8 +85,9 @@ Notas de despliegue:
 | AdGuard Home | Migrado a Portainer desde GitHub tras cambiar DNS temporalmente en Tailscale y reiniciar Portainer para que Docker usara `1.1.1.1`. Conserva configuracion y publica `53`, `3001` y `8081`. |
 | Monitoring | Migrado a Portainer desde GitHub con stack `server_monitoring`. La red `server-monitoring` se reutiliza como externa. Prometheus y Grafana requirieron corregir ownership en `/data/homelab/prometheus/data` y `/data/homelab/grafana/data`; ambos cargan de nuevo. |
 | Passbolt | Se eligio instalacion desde cero. Los datos antiguos se apartaron en `_backups/passbolt-pre-fresh`; la URL inicial es `http://homelab:8080`, SMTP queda desactivado/pendiente, la UI carga y el admin inicial fue creado por CLI. |
+| Portainer | Migrado al final por CLI. Se refresco `/data/homelab/portainer/data` desde el contenedor vivo antes de recrearlo; el contenedor actual monta `/data/homelab/portainer/data:/data` y publica `9443`. |
 
-Siguiente paso operativo: recrear cada stack desde Portainer, uno a uno, usando las rutas `/data/homelab`. No elimines los contenedores antiguos hasta validar el reemplazo.
+Siguiente paso operativo: revisar backups/contenedores legacy y decidir limpieza manual cuando se haya verificado estabilidad durante unos dias.
 
 ## Validacion
 
