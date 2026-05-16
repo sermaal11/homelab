@@ -11,4 +11,5 @@ services:
     environment:
       TZ: ${TZ:-Europe/Madrid}
     volumes:
+      - /run/dbus:/run/dbus:ro
       - ${HOMEASSISTANT_CONFIG_DIR:-/data/homelab/homeassistant}:/config

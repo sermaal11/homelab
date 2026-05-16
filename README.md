@@ -53,7 +53,7 @@ Estado de migracion:
 
 | Servicio | Estado | Origen vivo | Destino nuevo | Validacion |
 | --- | --- | --- | --- | --- |
-| Home Assistant | desplegado desde GitHub, pendiente de redeploy con capacidades Bluetooth | `homeassistant:/config` | `/data/homelab/homeassistant` | UI `8123`, logs, `check_config` |
+| Home Assistant | desplegado desde GitHub, pendiente de redeploy con D-Bus para Bluetooth | `homeassistant:/config` | `/data/homelab/homeassistant` | UI `8123`, logs, `check_config` |
 | AdGuard Home | datos extraidos y sincronizados, pendiente de recrear en Portainer | `adguard:/opt/adguardhome/conf`, `adguard:/opt/adguardhome/work` | `/data/homelab/adguard` | DNS `53`, UI/setup `3001` |
 | Monitoring | datos extraidos y sincronizados, pendiente de recrear en Portainer | `prometheus:/prometheus`, `grafana:/var/lib/grafana` | `/data/homelab/prometheus/data`, `/data/homelab/grafana/data` | Prometheus targets, Grafana `3000` |
 | Passbolt | preparado, pendiente de secretos y despliegue | datos existentes en `/data/homelab/passbolt` | `/data/homelab/passbolt` | DB, URL publica, SMTP |
@@ -81,7 +81,7 @@ Notas de despliegue:
 
 | Servicio | Nota |
 | --- | --- |
-| Home Assistant | El primer despliegue desde Portainer arranco correctamente, pero los logs pidieron `NET_ADMIN` y `NET_RAW` para gestion Bluetooth. El compose incluye esas capacidades y debe redeployarse desde GitHub. |
+| Home Assistant | El despliegue desde Portainer arranco correctamente. Docker confirma `NET_ADMIN` y `NET_RAW`; el compose ahora tambien monta `/run/dbus:/run/dbus:ro`, requerido por Home Assistant Container para Bluetooth. |
 
 Siguiente paso operativo: recrear cada stack desde Portainer, uno a uno, usando las rutas `/data/homelab`. No elimines los contenedores antiguos hasta validar el reemplazo.
 
