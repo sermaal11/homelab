@@ -23,7 +23,7 @@ AdGuard checkpoint: migrated to Portainer from GitHub using `/data/homelab/adgua
 
 Monitoring checkpoint: migrated to Portainer from GitHub with stack name `server_monitoring`. The Docker network `server-monitoring` predates the Compose stack and is external. Prometheus and Grafana required ownership fixes on `/data/homelab/prometheus/data` and `/data/homelab/grafana/data` after copying from old mounts/volumes; both services were validated in the browser afterward.
 
-Passbolt checkpoint: clean local/Tailscale install deployed from Portainer/GitHub using `PASSBOLT_BASE_URL=http://homelab:8080` and no SMTP for now. Previous Passbolt data was moved to `_backups/passbolt-pre-fresh`; do not delete that backup. GPG/JWT directories required ownership adjustment to UID/GID `33:33`; UI loads, and first admin user still needs to be created by CLI.
+Passbolt checkpoint: clean local/Tailscale install deployed from Portainer/GitHub using `PASSBOLT_BASE_URL=http://homelab:8080` and no SMTP for now. Previous Passbolt data was moved to `_backups/passbolt-pre-fresh`; do not delete that backup. GPG/JWT directories required ownership adjustment to UID/GID `33:33`; UI loads and the initial admin user was created through the CLI registration link.
 
 ## Build, Test, and Development Commands
 
