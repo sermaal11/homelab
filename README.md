@@ -54,7 +54,7 @@ Estado de migracion:
 | Servicio | Estado | Origen vivo | Destino nuevo | Validacion |
 | --- | --- | --- | --- | --- |
 | Home Assistant | migrado y validado desde Portainer/GitHub | `homeassistant:/config` | `/data/homelab/homeassistant` | UI `8123`, logs, `check_config` |
-| AdGuard Home | datos extraidos y sincronizados, pendiente de recrear en Portainer | `adguard:/opt/adguardhome/conf`, `adguard:/opt/adguardhome/work` | `/data/homelab/adguard` | DNS `53`, UI/setup `3001` |
+| AdGuard Home | migrado y validado desde compose local | `adguard:/opt/adguardhome/conf`, `adguard:/opt/adguardhome/work` | `/data/homelab/adguard` | DNS `53`, UI/setup `3001` |
 | Monitoring | datos extraidos y sincronizados, pendiente de recrear en Portainer | `prometheus:/prometheus`, `grafana:/var/lib/grafana` | `/data/homelab/prometheus/data`, `/data/homelab/grafana/data` | Prometheus targets, Grafana `3000` |
 | Passbolt | preparado, pendiente de secretos y despliegue | datos existentes en `/data/homelab/passbolt` | `/data/homelab/passbolt` | DB, URL publica, SMTP |
 | Portainer | datos extraidos y sincronizados, pendiente de recrear al final por CLI | volumen `portainer_portainer_data` | `/data/homelab/portainer/data` | login `9443`, stacks visibles |
@@ -82,6 +82,7 @@ Notas de despliegue:
 | Servicio | Nota |
 | --- | --- |
 | Home Assistant | Migrado a `/data/homelab/homeassistant` y validado en UI con entidades/configuracion conservadas. Docker confirma `NET_ADMIN`, `NET_RAW` y `/run/dbus:/run/dbus:ro`; los logs siguen mostrando errores de `habluetooth.scanner`, pero el servicio funciona igual que antes. |
+| AdGuard Home | El despliegue desde GitHub fallo temporalmente porque al parar AdGuard el host perdio resolucion DNS hacia GitHub. Se levanto con `docker compose --env-file adguard/.env -f adguard/docker-compose.yml up -d`, conserva configuracion y publica `53`, `3001` y `8081`. |
 
 Siguiente paso operativo: recrear cada stack desde Portainer, uno a uno, usando las rutas `/data/homelab`. No elimines los contenedores antiguos hasta validar el reemplazo.
 
