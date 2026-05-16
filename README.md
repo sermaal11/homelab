@@ -1,26 +1,38 @@
-# Homelab
+# Homelab Infrastructure
 
-Repositorio publico para versionar los stacks Docker del homelab y desplegarlos desde Portainer. La configuracion declarativa vive en GitHub; los datos persistentes, secretos y ficheros `.env` viven solo en el servidor.
+Repositorio publico para documentar y versionar la capa declarativa de un homelab basado en Docker, Portainer y Tailscale. El objetivo es que el repositorio sea util como referencia operativa, demostracion tecnica y punto unico de verdad para los stacks.
 
-Ruta base actual:
+Los datos persistentes y secretos no forman parte del repositorio. Viven en el servidor bajo:
 
 ```text
 /data/homelab
 ```
 
-## Servicios
+## Arquitectura
 
-| Servicio | Stack | URL / puerto | Datos persistentes | Gestion |
+El homelab se organiza como stacks independientes por servicio. Portainer despliega los stacks de aplicacion desde GitHub, mientras que Portainer se mantiene con un flujo Git-first ejecutado por CLI para evitar que se autogestione desde su propia UI.
+
+| Capa | Servicio | Rol |
+| --- | --- | --- |
+| Gestion | Portainer | Gestion de stacks Docker y operaciones desde UI |
+| Automatizacion | Home Assistant | Integraciones, automatizaciones y paneles domesticos |
+| Red | AdGuard Home | DNS local, filtrado y resolucion para el homelab |
+| Observabilidad | Prometheus, Node Exporter, Grafana | Metricas, scraping y dashboards |
+| Secretos | Passbolt | Password manager local/Tailscale, pendiente de SMTP real |
+
+## Inventario
+
+| Servicio | Compose | Acceso | Persistencia | Gestion |
 | --- | --- | --- | --- | --- |
-| Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `/data/homelab/portainer/data` | Git-first, actualizado por CLI |
-| Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `/data/homelab/homeassistant` | Portainer desde GitHub |
-| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer desde GitHub |
-| Monitoring | `prometheus/docker-compose.yml` | Prometheus `9090`, Grafana `3000`, Node Exporter `9100` | `/data/homelab/prometheus/data`, `/data/homelab/grafana/data` | Portainer desde GitHub |
-| Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer desde GitHub |
+| Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `/data/homelab/portainer/data` | Git + CLI |
+| Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `/data/homelab/homeassistant` | Portainer + GitHub |
+| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
+| Monitoring | `prometheus/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100` | `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
+| Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer + GitHub |
 
-## Despliegue
+## Despliegue Desde Portainer
 
-Los stacks de aplicación se despliegan en Portainer con:
+Para los stacks de aplicacion:
 
 ```text
 Repository URL: https://github.com/sermaal11/homelab.git
@@ -28,28 +40,18 @@ Repository reference: refs/heads/main
 Compose path: <servicio>/docker-compose.yml
 ```
 
-Las variables reales se configuran en Portainer o en `.env` locales ignorados por Git. No subas `.env`, bases de datos, logs, claves, JWT ni directorios `data`.
+Las variables reales se configuran en Portainer o en `.env` locales ignorados por Git. Los `.env.example` documentan el contrato esperado sin exponer secretos.
 
-Portainer es la excepción: no debe autodesplegarse desde su propia UI. Su compose también vive en GitHub, pero se actualiza por CLI:
+Portainer se actualiza desde el host:
 
 ```bash
 git pull git@github.com:sermaal11/homelab.git main
 docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 ```
 
-Si `origin` sigue configurado por HTTPS y no hay token, usa la URL SSH explicita como arriba.
+## Variables Por Servicio
 
-## Variables
-
-Cada servicio tiene un `.env.example` versionado. Copia el ejemplo a `.env` solo en el servidor:
-
-```bash
-cp passbolt/.env.example passbolt/.env
-```
-
-Resumen de variables importantes:
-
-| Servicio | Variables clave |
+| Servicio | Variables principales |
 | --- | --- |
 | Home Assistant | `TZ`, `HOMEASSISTANT_CONFIG_DIR` |
 | AdGuard Home | `ADGUARD_DNS_PORT`, `ADGUARD_WEB_PORT`, `ADGUARD_SETUP_PORT`, `ADGUARD_WORK_DIR`, `ADGUARD_CONF_DIR` |
@@ -57,17 +59,59 @@ Resumen de variables importantes:
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
 
-## Notas Operativas
+Ejemplo de preparacion local:
 
-- `/data/docker` fue retirado; no debe usarse en nuevos stacks.
-- AdGuard es DNS del homelab. Si se para y Portainer necesita clonar GitHub, puede ser necesario usar DNS externo temporal en Tailscale y reiniciar Portainer para refrescar DNS de Docker.
-- La red `server-monitoring` ya existia antes del stack de monitoring, por eso se declara como externa.
-- Home Assistant usa `network_mode: host`, `privileged`, `NET_ADMIN`, `NET_RAW` y `/run/dbus:/run/dbus:ro` para discovery/Bluetooth.
-- Passbolt esta en modo local con `PASSBOLT_BASE_URL=http://homelab:8080` y sin SMTP por ahora. Cuando se exponga con Tailscale Funnel, revisar URL publica y SMTP real.
+```bash
+cp passbolt/.env.example passbolt/.env
+```
+
+## Seguridad
+
+### Resultado de Auditoria
+
+Auditoria realizada sobre ficheros versionados e historial Git:
+
+| Control | Resultado |
+| --- | --- |
+| Secretos reales en Git | No detectados |
+| `.env` versionados | No detectados |
+| Bases de datos versionadas | No detectadas |
+| Claves GPG/JWT/SSH versionadas | No detectadas |
+| Config sensible de Home Assistant | `secrets.yaml`, `.storage` y DB estan ignorados |
+| Config sensible de AdGuard | `AdGuardHome.yaml` y `work/` estan ignorados |
+| Datos de Grafana, Prometheus, Portainer y Passbolt | Ignorados |
+
+Comandos usados durante la revision:
+
+```bash
+git ls-files
+git grep -n -I -E '(password|secret|token|api[_-]?key|private[_-]?key|BEGIN .*PRIVATE|CHANGE_ME|jwt|gpg)'
+git grep -n -I -E '([0-9]{1,3}\.){3}[0-9]{1,3}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+git grep -n -I -E '(kVRq|PASSBOLT_DB_PASSWORD=[^C]|serverkey_private|BEGIN PGP|home-assistant_v2|AdGuardHome\.yaml)' $(git rev-list --all)
+git status --short --ignored
+```
+
+### Riesgos Aceptados
+
+| Riesgo | Motivo | Mitigacion |
+| --- | --- | --- |
+| Varias imagenes usan `latest` | Facilita actualizaciones en homelab | Revisar cambios antes de redeploy; considerar tags fijos si se prioriza reproducibilidad |
+| Portainer monta `/var/run/docker.sock` | Necesario para gestionar Docker | Restringir acceso a Portainer y proteger credenciales |
+| Home Assistant usa `network_mode: host` y `privileged` | Discovery local y Bluetooth | Mantenerlo solo en host confiable; no exponer directamente a Internet |
+| Node Exporter monta `/` como lectura | Necesario para metricas host | Mount read-only y red interna de monitoring |
+| AdGuard publica DNS `53` | Es DNS del homelab | Evitar exponer `53` fuera de LAN/Tailscale |
+| Passbolt usa HTTP local | Instalacion local/Tailscale inicial | Antes de Funnel, cambiar `PASSBOLT_BASE_URL` a URL publica HTTPS y configurar SMTP real |
+
+## Operacion
+
+- `/data/docker` fue retirado; no debe reaparecer en nuevos compose.
+- AdGuard es dependencia DNS. Si se para y Portainer necesita clonar GitHub, puede requerir DNS externo temporal en Tailscale y reinicio de Portainer para refrescar DNS de Docker.
+- La red `server-monitoring` es externa porque existia antes del stack de monitoring.
+- Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion
 
-Validar sintaxis de compose:
+Validar todos los compose:
 
 ```bash
 docker compose --env-file portainer/.env -f portainer/docker-compose.yml config
@@ -89,7 +133,7 @@ Prometheus:
 docker run --rm --entrypoint promtool -v "$PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml" prom/prometheus:latest check config /etc/prometheus/prometheus.yml
 ```
 
-Estado rapido:
+Estado general:
 
 ```bash
 docker ps
@@ -108,11 +152,19 @@ git status --short --ignored
 └── prometheus/
 ```
 
-## Publicacion
+## Publicacion Segura
 
 Antes de publicar cambios:
 
-- Ejecuta `git status --short --ignored`.
-- Confirma que solo se versionan `docker-compose.yml`, `.env.example`, YAML de Home Assistant y documentacion.
-- Verifica que `.env`, `secrets.yaml`, `.storage`, bases de datos, logs, claves GPG/JWT y datos persistentes siguen ignorados.
-- Valida el stack modificado con `docker compose ... config`.
+1. Ejecutar `git status --short --ignored`.
+2. Confirmar que solo se versionan compose, `.env.example`, YAML publico de Home Assistant y documentacion.
+3. Verificar que `.env`, `secrets.yaml`, `.storage`, bases de datos, logs, claves GPG/JWT y directorios persistentes siguen ignorados.
+4. Validar el compose modificado con `docker compose ... config`.
+5. Evitar incluir capturas con tokens, usuarios internos o URLs privadas sensibles.
+
+## Roadmap
+
+- Configurar SMTP real para Passbolt cuando se exponga con Tailscale Funnel.
+- Evaluar tags fijos o digest pinning para imagenes criticas.
+- Añadir backup automatizado para datos persistentes.
+- Documentar procedimiento de restauracion por servicio.

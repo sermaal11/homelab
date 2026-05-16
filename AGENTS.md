@@ -15,19 +15,21 @@ Treat `*/data/`, database files, logs, keys, JWT material, and Home Assistant `s
 
 During service migration work, every iteration must update both `README.md` and `AGENTS.md` whenever routes, ports, services, commands, migration status, validation steps, or rollback notes change. Keep documentation in sync with the exact operational state before moving to the next service.
 
-When `/data/docker` is absent but containers still show old bind mounts, treat the running containers as the source of truth until data has been extracted. Prefer copying live data into `_backups/<timestamp>/` first, then syncing into `/data/homelab` without deleting destination files unless a task explicitly calls for destructive cleanup.
+When `/data/docker` is absent but containers still show old bind mounts, treat the running containers as the source of truth until data has been extracted. Prefer copying live data to a temporary backup first, then syncing into `/data/homelab` without deleting destination files unless a task explicitly calls for destructive cleanup.
 
 Current migration checkpoint: Home Assistant has been deployed from GitHub through Portainer using `/data/homelab/homeassistant` and validated in the browser with existing entities/configuration present. Do not delete `homeassistant-legacy` until the broader migration is complete and rollback is no longer needed.
 
-AdGuard checkpoint: migrated to Portainer from GitHub using `/data/homelab/adguard` after temporarily removing AdGuard from Tailscale DNS and restarting Portainer so Docker picked up `1.1.1.1`. The old stack/container was removed during migration, but data had already been extracted to `/data/homelab/adguard` and `_backups/20260516-225201/adguard`; the new stack was validated with configuration preserved.
+AdGuard checkpoint: migrated to Portainer from GitHub using `/data/homelab/adguard` after temporarily removing AdGuard from Tailscale DNS and restarting Portainer so Docker picked up `1.1.1.1`; the new stack was validated with configuration preserved.
 
 Monitoring checkpoint: migrated to Portainer from GitHub with stack name `server_monitoring`. The Docker network `server-monitoring` predates the Compose stack and is external. Prometheus and Grafana required ownership fixes on `/data/homelab/prometheus/data` and `/data/homelab/grafana/data` after copying from old mounts/volumes; both services were validated in the browser afterward.
 
-Passbolt checkpoint: clean local/Tailscale install deployed from Portainer/GitHub using `PASSBOLT_BASE_URL=http://homelab:8080` and no SMTP for now. Previous Passbolt data was moved to `_backups/passbolt-pre-fresh`; do not delete that backup. GPG/JWT directories required ownership adjustment to UID/GID `33:33`; UI loads and the initial admin user was created through the CLI registration link.
+Passbolt checkpoint: clean local/Tailscale install deployed from Portainer/GitHub using `PASSBOLT_BASE_URL=http://homelab:8080` and no SMTP for now. Previous Passbolt data was intentionally removed after the new install was validated. GPG/JWT directories required ownership adjustment to UID/GID `33:33`; UI loads and the initial admin user was created through the CLI registration link.
 
-Portainer checkpoint: migrated last by CLI after refreshing `/data/homelab/portainer/data` from the live container. Current Portainer container mounts `/data/homelab/portainer/data:/data` and `/var/run/docker.sock:/var/run/docker.sock`; keep previous backups until the user confirms cleanup.
+Portainer checkpoint: migrated last by CLI after refreshing `/data/homelab/portainer/data` from the live container. Current Portainer container mounts `/data/homelab/portainer/data:/data` and `/var/run/docker.sock:/var/run/docker.sock`.
 
 Portainer is managed Git-first but CLI-deployed, not self-managed by Portainer UI. To update it, pull from GitHub and run `docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d`; use explicit SSH remote `git@github.com:sermaal11/homelab.git` if the local `origin` remains HTTPS.
+
+Security audit checkpoint: README now documents the public-repo security posture. No real secrets were found in tracked files or Git history during regex-based review; only ignored local `.env`, runtime data, databases, logs, Home Assistant secrets, AdGuard config, Grafana/Prometheus data, Portainer data, and Passbolt DB/GPG/JWT remain on disk.
 
 ## Build, Test, and Development Commands
 
