@@ -23,6 +23,8 @@ AdGuard checkpoint: migrated to Portainer from GitHub using `/data/homelab/adgua
 
 Monitoring checkpoint: migrated to Portainer from GitHub with stack name `server_monitoring`. The Docker network `server-monitoring` predates the Compose stack and is external. Prometheus and Grafana required ownership fixes on `/data/homelab/prometheus/data` and `/data/homelab/grafana/data` after copying from old mounts/volumes; both services were validated in the browser afterward.
 
+Passbolt checkpoint: user chose a clean local/Tailscale install using `PASSBOLT_BASE_URL=http://homelab:8080` and no SMTP for now. Previous Passbolt data was moved to `_backups/passbolt-pre-fresh`; do not delete that backup. Public compose defaults allow no-SMTP local startup, but real DB password stays only in ignored `passbolt/.env` or Portainer environment variables.
+
 ## Build, Test, and Development Commands
 
 - `docker compose -f portainer/docker-compose.yml config`: validate the Portainer Compose file.

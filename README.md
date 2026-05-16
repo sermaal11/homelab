@@ -56,7 +56,7 @@ Estado de migracion:
 | Home Assistant | migrado y validado desde Portainer/GitHub | `homeassistant:/config` | `/data/homelab/homeassistant` | UI `8123`, logs, `check_config` |
 | AdGuard Home | migrado y validado desde Portainer/GitHub | `adguard:/opt/adguardhome/conf`, `adguard:/opt/adguardhome/work` | `/data/homelab/adguard` | DNS `53`, UI/setup `3001` |
 | Monitoring | migrado y validado desde Portainer/GitHub | `prometheus:/prometheus`, `grafana:/var/lib/grafana` | `/data/homelab/prometheus/data`, `/data/homelab/grafana/data` | Prometheus targets, Grafana `3000` |
-| Passbolt | preparado, pendiente de secretos y despliegue | datos existentes en `/data/homelab/passbolt` | `/data/homelab/passbolt` | DB, URL publica, SMTP |
+| Passbolt | preparado para instalacion limpia local | datos antiguos apartados en `_backups/passbolt-pre-fresh` | `/data/homelab/passbolt` | DB, URL local, SMTP pendiente |
 | Portainer | datos extraidos y sincronizados, pendiente de recrear al final por CLI | volumen `portainer_portainer_data` | `/data/homelab/portainer/data` | login `9443`, stacks visibles |
 
 Datos sincronizados en `/data/homelab`:
@@ -84,6 +84,7 @@ Notas de despliegue:
 | Home Assistant | Migrado a `/data/homelab/homeassistant` y validado en UI con entidades/configuracion conservadas. Docker confirma `NET_ADMIN`, `NET_RAW` y `/run/dbus:/run/dbus:ro`; los logs siguen mostrando errores de `habluetooth.scanner`, pero el servicio funciona igual que antes. |
 | AdGuard Home | Migrado a Portainer desde GitHub tras cambiar DNS temporalmente en Tailscale y reiniciar Portainer para que Docker usara `1.1.1.1`. Conserva configuracion y publica `53`, `3001` y `8081`. |
 | Monitoring | Migrado a Portainer desde GitHub con stack `server_monitoring`. La red `server-monitoring` se reutiliza como externa. Prometheus y Grafana requirieron corregir ownership en `/data/homelab/prometheus/data` y `/data/homelab/grafana/data`; ambos cargan de nuevo. |
+| Passbolt | Se eligio instalacion desde cero. Los datos antiguos se apartaron en `_backups/passbolt-pre-fresh`; la URL inicial sera `http://homelab:8080` y SMTP queda desactivado/pendiente con valores locales por defecto. |
 
 Siguiente paso operativo: recrear cada stack desde Portainer, uno a uno, usando las rutas `/data/homelab`. No elimines los contenedores antiguos hasta validar el reemplazo.
 
