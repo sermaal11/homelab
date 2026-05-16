@@ -1,0 +1,51 @@
+# Local environment files
+.env
+*.env
+!.env.example
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Runtime logs and databases
+_backups/
+*.log
+*.log.*
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.pid
+*.lock
+
+# Home Assistant generated and sensitive state
+homeassistant/.cloud/
+homeassistant/.storage/
+homeassistant/.cache/
+homeassistant/deps/
+homeassistant/tts/
+homeassistant/secrets.yaml
+homeassistant/home-assistant_v2.db*
+homeassistant/home-assistant.log*
+homeassistant/.HA_VERSION
+homeassistant/.ha_run.lock
+
+# Prometheus TSDB
+prometheus/data/
+
+# Grafana persisted data
+grafana/data/
+
+# AdGuard runtime state and local config with credentials
+adguard/work/
+adguard/conf/AdGuardHome.yaml
+
+# Portainer persisted data
+portainer/data/
+
+# Passbolt persisted data and key material
+passbolt/db/
+passbolt/gpg/
+passbolt/jwt/

@@ -1,0 +1,13 @@
+services:
+  adguard:
+    container_name: adguard
+    image: adguard/adguardhome:latest
+    restart: unless-stopped
+    ports:
+      - "${ADGUARD_DNS_PORT:-53}:53/tcp"
+      - "${ADGUARD_DNS_PORT:-53}:53/udp"
+      - "${ADGUARD_WEB_PORT:-8081}:80/tcp"
+      - "${ADGUARD_SETUP_PORT:-3001}:3000/tcp"
+    volumes:
+      - ${ADGUARD_WORK_DIR:-/data/homelab/adguard/work}:/opt/adguardhome/work
+      - ${ADGUARD_CONF_DIR:-/data/homelab/adguard/conf}:/opt/adguardhome/conf

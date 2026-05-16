@@ -1,0 +1,38 @@
+services:
+  passbolt-db:
+    container_name: passbolt-db
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "true"
+      MYSQL_DATABASE: ${PASSBOLT_DB_NAME:-passbolt}
+      MYSQL_USER: ${PASSBOLT_DB_USER:-passbolt}
+      MYSQL_PASSWORD: ${PASSBOLT_DB_PASSWORD:?Set PASSBOLT_DB_PASSWORD in passbolt/.env}
+    volumes:
+      - ${PASSBOLT_DB_DIR:-/data/homelab/passbolt/db}:/var/lib/mysql
+
+  passbolt:
+    container_name: passbolt
+    image: passbolt/passbolt:latest-ce
+    restart: unless-stopped
+    depends_on:
+      - passbolt-db
+    environment:
+      APP_FULL_BASE_URL: ${PASSBOLT_BASE_URL:?Set PASSBOLT_BASE_URL in passbolt/.env}
+      DATASOURCES_DEFAULT_HOST: passbolt-db
+      DATASOURCES_DEFAULT_DATABASE: ${PASSBOLT_DB_NAME:-passbolt}
+      DATASOURCES_DEFAULT_USERNAME: ${PASSBOLT_DB_USER:-passbolt}
+      DATASOURCES_DEFAULT_PASSWORD: ${PASSBOLT_DB_PASSWORD:?Set PASSBOLT_DB_PASSWORD in passbolt/.env}
+      EMAIL_DEFAULT_FROM_NAME: ${PASSBOLT_EMAIL_FROM_NAME:-Passbolt}
+      EMAIL_DEFAULT_FROM: ${PASSBOLT_EMAIL_FROM:?Set PASSBOLT_EMAIL_FROM in passbolt/.env}
+      EMAIL_TRANSPORT_DEFAULT_HOST: ${PASSBOLT_SMTP_HOST:?Set PASSBOLT_SMTP_HOST in passbolt/.env}
+      EMAIL_TRANSPORT_DEFAULT_PORT: ${PASSBOLT_SMTP_PORT:-587}
+      EMAIL_TRANSPORT_DEFAULT_USERNAME: ${PASSBOLT_SMTP_USER:-}
+      EMAIL_TRANSPORT_DEFAULT_PASSWORD: ${PASSBOLT_SMTP_PASSWORD:-}
+      EMAIL_TRANSPORT_DEFAULT_TLS: ${PASSBOLT_SMTP_TLS:-true}
+    ports:
+      - "${PASSBOLT_HTTP_PORT:-8080}:80"
+      - "${PASSBOLT_HTTPS_PORT:-8444}:443"
+    volumes:
+      - ${PASSBOLT_GPG_DIR:-/data/homelab/passbolt/gpg}:/etc/passbolt/gpg
+      - ${PASSBOLT_JWT_DIR:-/data/homelab/passbolt/jwt}:/etc/passbolt/jwt

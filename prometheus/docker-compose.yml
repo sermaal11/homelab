@@ -1,0 +1,45 @@
+services:
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ${PROMETHEUS_CONFIG_FILE:-/data/homelab/prometheus/prometheus.yml}:/etc/prometheus/prometheus.yml:ro
+      - ${PROMETHEUS_DATA_DIR:-/data/homelab/prometheus/data}:/prometheus
+    networks:
+      - server-monitoring
+
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+    pid: host
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - server-monitoring
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - ${GRAFANA_DATA_DIR:-/data/homelab/grafana/data}:/var/lib/grafana
+    networks:
+      - server-monitoring
+
+networks:
+  server-monitoring:
+    name: server-monitoring
