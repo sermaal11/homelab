@@ -27,6 +27,8 @@ Passbolt checkpoint: clean local/Tailscale install deployed from Portainer/GitHu
 
 Portainer checkpoint: migrated last by CLI after refreshing `/data/homelab/portainer/data` from the live container. Current Portainer container mounts `/data/homelab/portainer/data:/data` and `/var/run/docker.sock:/var/run/docker.sock`; keep previous backups until the user confirms cleanup.
 
+Portainer is managed Git-first but CLI-deployed, not self-managed by Portainer UI. To update it, pull from GitHub and run `docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d`; use explicit SSH remote `git@github.com:sermaal11/homelab.git` if the local `origin` remains HTTPS.
+
 ## Build, Test, and Development Commands
 
 - `docker compose -f portainer/docker-compose.yml config`: validate the Portainer Compose file.

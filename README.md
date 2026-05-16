@@ -29,6 +29,15 @@ Los datos persistentes, logs, bases de datos, claves, JWT, backups y ficheros `.
 4. Anade las variables del `.env` en la seccion de environment variables del stack, o usa el repositorio Git desde Portainer apuntando al directorio del servicio.
 5. Despliega y valida logs antes de migrar trafico.
 
+Portainer es la excepcion: no se recomienda que Portainer se autodespliegue desde su propia UI. Su compose vive en GitHub como fuente de verdad, pero se actualiza por CLI:
+
+```bash
+git pull git@github.com:sermaal11/homelab.git main
+docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
+```
+
+Si el remoto local sigue configurado por HTTPS y no tienes token, usa la URL SSH explicita en `git pull` como en el ejemplo.
+
 Para stacks ya activos, no ejecutes `up -d` sin comprobar primero las rutas de volumen. Como `/data/docker` ya no existe, reiniciar un contenedor que aun apunte a esa ruta puede arrancar vacio o fallar.
 
 ## Estado actual detectado
