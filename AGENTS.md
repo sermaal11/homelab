@@ -19,7 +19,7 @@ When `/data/docker` is absent but containers still show old bind mounts, treat t
 
 Current migration checkpoint: Home Assistant has been deployed from GitHub through Portainer using `/data/homelab/homeassistant` and validated in the browser with existing entities/configuration present. Do not delete `homeassistant-legacy` until the broader migration is complete and rollback is no longer needed.
 
-AdGuard checkpoint: the old stack/container was removed during migration, but data had already been extracted to `/data/homelab/adguard` and `_backups/20260516-225201/adguard`. Because stopping AdGuard broke DNS resolution for GitHub from Portainer, AdGuard was restored with local `docker compose --env-file adguard/.env -f adguard/docker-compose.yml up -d` and validated in the browser with configuration preserved.
+AdGuard checkpoint: migrated to Portainer from GitHub using `/data/homelab/adguard` after temporarily removing AdGuard from Tailscale DNS and restarting Portainer so Docker picked up `1.1.1.1`. The old stack/container was removed during migration, but data had already been extracted to `/data/homelab/adguard` and `_backups/20260516-225201/adguard`; the new stack was validated with configuration preserved.
 
 ## Build, Test, and Development Commands
 
