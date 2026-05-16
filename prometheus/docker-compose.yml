@@ -43,3 +43,4 @@ services:
 networks:
   server-monitoring:
     name: server-monitoring
+    external: true
