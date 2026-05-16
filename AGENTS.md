@@ -17,6 +17,8 @@ During service migration work, every iteration must update both `README.md` and 
 
 When `/data/docker` is absent but containers still show old bind mounts, treat the running containers as the source of truth until data has been extracted. Prefer copying live data into `_backups/<timestamp>/` first, then syncing into `/data/homelab` without deleting destination files unless a task explicitly calls for destructive cleanup.
 
+Current migration checkpoint: Home Assistant has been deployed from GitHub through Portainer using `/data/homelab/homeassistant` and validated in the browser with existing entities/configuration present. Do not delete `homeassistant-legacy` until the broader migration is complete and rollback is no longer needed.
+
 ## Build, Test, and Development Commands
 
 - `docker compose -f portainer/docker-compose.yml config`: validate the Portainer Compose file.
