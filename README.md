@@ -53,7 +53,7 @@ Estado de migracion:
 
 | Servicio | Estado | Origen vivo | Destino nuevo | Validacion |
 | --- | --- | --- | --- | --- |
-| Home Assistant | datos extraidos y sincronizados, pendiente de recrear en Portainer | `homeassistant:/config` | `/data/homelab/homeassistant` | UI `8123`, logs, `check_config` |
+| Home Assistant | desplegado desde GitHub, pendiente de redeploy con capacidades Bluetooth | `homeassistant:/config` | `/data/homelab/homeassistant` | UI `8123`, logs, `check_config` |
 | AdGuard Home | datos extraidos y sincronizados, pendiente de recrear en Portainer | `adguard:/opt/adguardhome/conf`, `adguard:/opt/adguardhome/work` | `/data/homelab/adguard` | DNS `53`, UI/setup `3001` |
 | Monitoring | datos extraidos y sincronizados, pendiente de recrear en Portainer | `prometheus:/prometheus`, `grafana:/var/lib/grafana` | `/data/homelab/prometheus/data`, `/data/homelab/grafana/data` | Prometheus targets, Grafana `3000` |
 | Passbolt | preparado, pendiente de secretos y despliegue | datos existentes en `/data/homelab/passbolt` | `/data/homelab/passbolt` | DB, URL publica, SMTP |
@@ -76,6 +76,12 @@ Validaciones realizadas tras la sincronizacion:
 | `docker compose config` de Portainer, Home Assistant, Monitoring, AdGuard y Passbolt | OK |
 | Home Assistant `check_config` con `/data/homelab/homeassistant` | OK |
 | Prometheus `promtool check config` con `/data/homelab/prometheus/prometheus.yml` | OK |
+
+Notas de despliegue:
+
+| Servicio | Nota |
+| --- | --- |
+| Home Assistant | El primer despliegue desde Portainer arranco correctamente, pero los logs pidieron `NET_ADMIN` y `NET_RAW` para gestion Bluetooth. El compose incluye esas capacidades y debe redeployarse desde GitHub. |
 
 Siguiente paso operativo: recrear cada stack desde Portainer, uno a uno, usando las rutas `/data/homelab`. No elimines los contenedores antiguos hasta validar el reemplazo.
 

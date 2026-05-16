@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     network_mode: host
     privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     environment:
       TZ: ${TZ:-Europe/Madrid}
     volumes:
