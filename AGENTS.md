@@ -21,7 +21,7 @@ Current migration checkpoint: Home Assistant has been deployed from GitHub throu
 
 AdGuard checkpoint: migrated to Portainer from GitHub using `/data/homelab/adguard` after temporarily removing AdGuard from Tailscale DNS and restarting Portainer so Docker picked up `1.1.1.1`. The old stack/container was removed during migration, but data had already been extracted to `/data/homelab/adguard` and `_backups/20260516-225201/adguard`; the new stack was validated with configuration preserved.
 
-Monitoring checkpoint: the Docker network `server-monitoring` predates the Compose stack and has no Compose ownership labels, so `prometheus/docker-compose.yml` must treat it as `external: true`.
+Monitoring checkpoint: migrated to Portainer from GitHub with stack name `server_monitoring`. The Docker network `server-monitoring` predates the Compose stack and is external. Prometheus and Grafana required ownership fixes on `/data/homelab/prometheus/data` and `/data/homelab/grafana/data` after copying from old mounts/volumes; both services were validated in the browser afterward.
 
 ## Build, Test, and Development Commands
 
