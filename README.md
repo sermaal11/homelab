@@ -30,6 +30,26 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Monitoring | `prometheus/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100` | `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer + GitHub |
 
+## MCP De Grafana
+
+El repositorio incluye un wrapper para conectar Codex localmente con Grafana usando la imagen oficial `grafana/mcp-grafana`. No se despliega como servicio ni se expone a otros clientes: Codex lo arranca bajo demanda en modo `stdio`, el contenedor se une a la red Docker `server-monitoring` y habla con Grafana por `http://grafana:3000`.
+
+Preparacion local:
+
+```bash
+cp grafana/mcp-grafana.env.example grafana/mcp-grafana.env
+```
+
+Despues, crear en Grafana un service account token con permisos acordes al uso previsto y guardarlo en `grafana/mcp-grafana.env` como `GRAFANA_SERVICE_ACCOUNT_TOKEN`. El archivo real queda ignorado por Git. Para permitir que Codex cree o modifique dashboards, alertas y otros recursos, usar un service account con rol `Editor` o permisos equivalentes.
+
+Registrar el MCP local en Codex:
+
+```bash
+codex mcp add grafana -- /data/homelab/scripts/mcp-grafana.sh
+```
+
+El wrapper permite operaciones de escritura; el alcance real depende de los permisos del service account configurado en Grafana.
+
 ## Despliegue Desde Portainer
 
 Para los stacks de aplicacion:
@@ -56,6 +76,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | Home Assistant | `TZ`, `HOMEASSISTANT_CONFIG_DIR` |
 | AdGuard Home | `ADGUARD_DNS_PORT`, `ADGUARD_WEB_PORT`, `ADGUARD_SETUP_PORT`, `ADGUARD_WORK_DIR`, `ADGUARD_CONF_DIR` |
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR` |
+| Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
 
@@ -119,6 +140,14 @@ docker compose --env-file homeassistant/.env -f homeassistant/docker-compose.yml
 docker compose --env-file adguard/.env -f adguard/docker-compose.yml config
 docker compose --env-file prometheus/.env -f prometheus/docker-compose.yml config
 docker compose --env-file passbolt/.env -f passbolt/docker-compose.yml config
+```
+
+Grafana MCP:
+
+```bash
+docker network inspect server-monitoring
+test -n "$(grep '^GRAFANA_SERVICE_ACCOUNT_TOKEN=' grafana/mcp-grafana.env | cut -d= -f2-)"
+codex mcp get grafana
 ```
 
 Home Assistant:

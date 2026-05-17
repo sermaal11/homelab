@@ -31,6 +31,8 @@ Portainer is managed Git-first but CLI-deployed, not self-managed by Portainer U
 
 Security audit checkpoint: README now documents the public-repo security posture. No real secrets were found in tracked files or Git history during regex-based review; only ignored local `.env`, runtime data, databases, logs, Home Assistant secrets, AdGuard config, Grafana/Prometheus data, Portainer data, and Passbolt DB/GPG/JWT remain on disk.
 
+Grafana MCP checkpoint: Codex is connected locally through `scripts/mcp-grafana.sh`; do not deploy this as a shared MCP service for other clients. The wrapper runs the official `grafana/mcp-grafana` Docker image in `stdio` mode on the external `server-monitoring` Docker network. Keep the real service account token only in ignored local file `grafana/mcp-grafana.env`; use `grafana/mcp-grafana.env.example` as the documented contract. The wrapper allows write operations, so the effective access level is controlled by the Grafana service account permissions.
+
 ## Build, Test, and Development Commands
 
 - `docker compose -f portainer/docker-compose.yml config`: validate the Portainer Compose file.
@@ -38,6 +40,7 @@ Security audit checkpoint: README now documents the public-repo security posture
 - `docker compose -f portainer/docker-compose.yml logs -f`: follow Portainer logs.
 - `docker run --rm -v "$PWD/homeassistant:/config" ghcr.io/home-assistant/home-assistant:stable python -m homeassistant --script check_config --config /config`: validate Home Assistant configuration from the repository root.
 - `docker run --rm -v "$PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml" prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle`: smoke-test Prometheus startup with this config.
+- `codex mcp get grafana`: verify the Grafana MCP launcher is registered in the local Codex config after running `codex mcp add grafana -- /data/homelab/scripts/mcp-grafana.sh`.
 
 Use service-specific Docker commands when no wrapper script exists.
 

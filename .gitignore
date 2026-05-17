@@ -37,6 +37,8 @@ prometheus/data/
 
 # Grafana persisted data
 grafana/data/
+grafana/mcp-grafana.env
+grafana/mcp-grafana.env *
 
 # AdGuard runtime state and local config with credentials
 adguard/work/
