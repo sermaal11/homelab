@@ -20,7 +20,7 @@ scrape_configs:
       - targets: ["http://prometheus:9090/-/ready"]
         labels:
           service: "Prometheus"
-      - targets: ["http://adguard"]
+      - targets: ["http://adguard:3000"]
         labels:
           service: "AdGuard Home"
       - targets: ["http://passbolt"]

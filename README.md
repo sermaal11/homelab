@@ -26,7 +26,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | --- | --- | --- | --- | --- |
 | Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `/data/homelab/portainer/data` | Git + CLI |
 | Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `/data/homelab/homeassistant` | Portainer + GitHub |
-| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:8081`; setup `3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
+| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
 | Monitoring | `prometheus/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer + GitHub |
 
@@ -61,7 +61,7 @@ Targets actuales del job `service-health`:
 | Home Assistant | `http://host.docker.internal:8123` |
 | Grafana | `http://grafana:3000/api/health` |
 | Prometheus | `http://prometheus:9090/-/ready` |
-| AdGuard Home | `http://adguard` |
+| AdGuard Home | `http://adguard:3000` |
 | Passbolt | `http://passbolt` |
 | Portainer | `https://portainer:9443` |
 
