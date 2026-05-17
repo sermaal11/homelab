@@ -27,7 +27,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `/data/homelab/portainer/data` | Git + CLI |
 | Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `/data/homelab/homeassistant` | Portainer + GitHub |
 | AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
-| Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | Temporalmente `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | CLI actual; Portainer pendiente de apuntar a `server_monitoring/docker-compose.yml` |
+| Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | Temporalmente `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer + GitHub |
 
 ## MCP De Grafana
@@ -162,7 +162,7 @@ git status --short --ignored
 - AdGuard es dependencia DNS. Si se para y Portainer necesita clonar GitHub, puede requerir DNS externo temporal en Tailscale y reinicio de Portainer para refrescar DNS de Docker.
 - La red `server-monitoring` es externa porque existia antes del stack de monitoring.
 - El stack `server_monitoring` esta en migracion de estructura: compose y configs viven en `server_monitoring/`, pero los datos persistentes siguen temporalmente en `grafana/data` y `prometheus/data`.
-- El stack `server_monitoring` esta levantado por CLI desde `server_monitoring/docker-compose.yml`. Antes de redeployar desde Portainer, actualizar el Compose path del stack a `server_monitoring/docker-compose.yml`.
+- El stack `server_monitoring` se despliega desde Portainer/GitHub usando `server_monitoring/docker-compose.yml`.
 - Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
