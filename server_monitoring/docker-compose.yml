@@ -11,7 +11,7 @@ services:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ${PROMETHEUS_CONFIG_FILE:-/data/homelab/server_monitoring/prometheus/prometheus.yml}:/etc/prometheus/prometheus.yml:ro
-      - ${PROMETHEUS_DATA_DIR:-/data/homelab/prometheus/data}:/prometheus
+      - ${PROMETHEUS_DATA_DIR:-/data/homelab/server_monitoring/prometheus/data}:/prometheus
     networks:
       - server-monitoring
 
@@ -52,7 +52,7 @@ services:
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
     volumes:
-      - ${GRAFANA_DATA_DIR:-/data/homelab/grafana/data}:/var/lib/grafana
+      - ${GRAFANA_DATA_DIR:-/data/homelab/server_monitoring/grafana/data}:/var/lib/grafana
     networks:
       - server-monitoring
 

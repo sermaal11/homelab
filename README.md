@@ -2,7 +2,7 @@
 
 Repositorio publico para documentar y versionar la capa declarativa de un homelab basado en Docker, Portainer y Tailscale. El objetivo es que el repositorio sea util como referencia operativa, demostracion tecnica y punto unico de verdad para los stacks.
 
-Los datos persistentes y secretos no forman parte del repositorio. Viven en el servidor bajo:
+Los datos persistentes y secretos no forman parte del repositorio. Viven como bind mounts locales documentados en los `.env.example`; en este servidor se usa una raiz de datos dedicada:
 
 ```text
 /data/homelab
@@ -24,11 +24,11 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 
 | Servicio | Compose | Acceso | Persistencia | Gestion |
 | --- | --- | --- | --- | --- |
-| Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `/data/homelab/portainer/data` | Git + CLI |
-| Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `/data/homelab/homeassistant` | Portainer + GitHub |
-| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
-| Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | Temporalmente `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
-| Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer + GitHub |
+| Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `portainer/data` | Git + CLI |
+| Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `homeassistant/` | Portainer + GitHub |
+| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `adguard/conf`, `adguard/work` | Portainer + GitHub |
+| Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `server_monitoring/grafana/data`, `server_monitoring/prometheus/data` | Portainer + GitHub |
+| Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `passbolt/db`, `passbolt/gpg`, `passbolt/jwt` | Portainer + GitHub |
 
 ## MCP De Grafana
 
@@ -161,7 +161,7 @@ git status --short --ignored
 - `/data/docker` fue retirado; no debe reaparecer en nuevos compose.
 - AdGuard es dependencia DNS. Si se para y Portainer necesita clonar GitHub, puede requerir DNS externo temporal en Tailscale y reinicio de Portainer para refrescar DNS de Docker.
 - La red `server-monitoring` es externa porque existia antes del stack de monitoring.
-- El stack `server_monitoring` esta en migracion de estructura: compose y configs viven en `server_monitoring/`, pero los datos persistentes siguen temporalmente en `grafana/data` y `prometheus/data`.
+- El stack `server_monitoring` agrupa compose, configs y datos persistentes de Grafana y Prometheus bajo `server_monitoring/`.
 - El stack `server_monitoring` se despliega desde Portainer/GitHub usando `server_monitoring/docker-compose.yml`.
 - Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
@@ -211,11 +211,9 @@ git status --short --ignored
 ```text
 .
 ├── adguard/
-├── grafana/
 ├── homeassistant/
 ├── passbolt/
 ├── portainer/
-├── prometheus/          # datos temporales pendientes de mover
 └── server_monitoring/
 ```
 
