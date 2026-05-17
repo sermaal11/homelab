@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-ENV_FILE="${GRAFANA_MCP_ENV_FILE:-/data/homelab/grafana/mcp-grafana.env}"
+ENV_FILE="${GRAFANA_MCP_ENV_FILE:-/data/homelab/server_monitoring/grafana/mcp-grafana.env}"
 
 if [ -f "$ENV_FILE" ]; then
   # shellcheck disable=SC1090

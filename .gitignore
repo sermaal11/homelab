@@ -34,11 +34,15 @@ homeassistant/.ha_run.lock
 
 # Prometheus TSDB
 prometheus/data/
+server_monitoring/prometheus/data/
 
 # Grafana persisted data
 grafana/data/
 grafana/mcp-grafana.env
 grafana/mcp-grafana.env *
+server_monitoring/grafana/data/
+server_monitoring/grafana/mcp-grafana.env
+server_monitoring/grafana/mcp-grafana.env *
 
 # AdGuard runtime state and local config with credentials
 adguard/work/

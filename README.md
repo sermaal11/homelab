@@ -27,7 +27,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `/data/homelab/portainer/data` | Git + CLI |
 | Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `/data/homelab/homeassistant` | Portainer + GitHub |
 | AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
-| Monitoring | `prometheus/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
+| Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | Temporalmente `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | CLI actual; Portainer pendiente de apuntar a `server_monitoring/docker-compose.yml` |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer + GitHub |
 
 ## MCP De Grafana
@@ -37,10 +37,10 @@ El repositorio incluye un wrapper para conectar Codex localmente con Grafana usa
 Preparacion local:
 
 ```bash
-cp grafana/mcp-grafana.env.example grafana/mcp-grafana.env
+cp server_monitoring/grafana/mcp-grafana.env.example server_monitoring/grafana/mcp-grafana.env
 ```
 
-Despues, crear en Grafana un service account token con permisos acordes al uso previsto y guardarlo en `grafana/mcp-grafana.env` como `GRAFANA_SERVICE_ACCOUNT_TOKEN`. El archivo real queda ignorado por Git. Para permitir que Codex cree o modifique dashboards, alertas y otros recursos, usar un service account con rol `Editor` o permisos equivalentes.
+Despues, crear en Grafana un service account token con permisos acordes al uso previsto y guardarlo en `server_monitoring/grafana/mcp-grafana.env` como `GRAFANA_SERVICE_ACCOUNT_TOKEN`. El archivo real queda ignorado por Git. Para permitir que Codex cree o modifique dashboards, alertas y otros recursos, usar un service account con rol `Editor` o permisos equivalentes.
 
 Registrar el MCP local en Codex:
 
@@ -161,7 +161,9 @@ git status --short --ignored
 - `/data/docker` fue retirado; no debe reaparecer en nuevos compose.
 - AdGuard es dependencia DNS. Si se para y Portainer necesita clonar GitHub, puede requerir DNS externo temporal en Tailscale y reinicio de Portainer para refrescar DNS de Docker.
 - La red `server-monitoring` es externa porque existia antes del stack de monitoring.
-- El stack `server_monitoring` se despliega desde Portainer/GitHub. Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
+- El stack `server_monitoring` esta en migracion de estructura: compose y configs viven en `server_monitoring/`, pero los datos persistentes siguen temporalmente en `grafana/data` y `prometheus/data`.
+- El stack `server_monitoring` esta levantado por CLI desde `server_monitoring/docker-compose.yml`. Antes de redeployar desde Portainer, actualizar el Compose path del stack a `server_monitoring/docker-compose.yml`.
+- Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion
@@ -172,7 +174,7 @@ Validar todos los compose:
 docker compose --env-file portainer/.env -f portainer/docker-compose.yml config
 docker compose --env-file homeassistant/.env -f homeassistant/docker-compose.yml config
 docker compose --env-file adguard/.env -f adguard/docker-compose.yml config
-docker compose --env-file prometheus/.env -f prometheus/docker-compose.yml config
+docker compose -p server_monitoring --env-file server_monitoring/.env -f server_monitoring/docker-compose.yml config
 docker compose --env-file passbolt/.env -f passbolt/docker-compose.yml config
 ```
 
@@ -180,7 +182,7 @@ Grafana MCP:
 
 ```bash
 docker network inspect server-monitoring
-test -n "$(grep '^GRAFANA_SERVICE_ACCOUNT_TOKEN=' grafana/mcp-grafana.env | cut -d= -f2-)"
+test -n "$(grep '^GRAFANA_SERVICE_ACCOUNT_TOKEN=' server_monitoring/grafana/mcp-grafana.env | cut -d= -f2-)"
 codex mcp get grafana
 ```
 
@@ -193,8 +195,8 @@ docker run --rm -v "$PWD/homeassistant:/config" ghcr.io/home-assistant/home-assi
 Prometheus:
 
 ```bash
-docker run --rm --entrypoint promtool -v "$PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml" prom/prometheus:latest check config /etc/prometheus/prometheus.yml
-docker run --rm --entrypoint blackbox_exporter -v "$PWD/prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml" prom/blackbox-exporter:latest --config.check --config.file=/etc/blackbox_exporter/config.yml
+docker run --rm --entrypoint promtool -v "$PWD/server_monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml" prom/prometheus:latest check config /etc/prometheus/prometheus.yml
+docker run --rm --entrypoint blackbox_exporter -v "$PWD/server_monitoring/prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml" prom/blackbox-exporter:latest --config.check --config.file=/etc/blackbox_exporter/config.yml
 ```
 
 Estado general:
@@ -213,7 +215,8 @@ git status --short --ignored
 ├── homeassistant/
 ├── passbolt/
 ├── portainer/
-└── prometheus/
+├── prometheus/          # datos temporales pendientes de mover
+└── server_monitoring/
 ```
 
 ## Publicacion Segura
