@@ -14,19 +14,19 @@ scrape_configs:
       - targets: ["http://host.docker.internal:8123"]
         labels:
           service: "Home Assistant"
-      - targets: ["http://host.docker.internal:3000/api/health"]
+      - targets: ["http://grafana:3000/api/health"]
         labels:
           service: "Grafana"
-      - targets: ["http://host.docker.internal:9090/-/ready"]
+      - targets: ["http://prometheus:9090/-/ready"]
         labels:
           service: "Prometheus"
-      - targets: ["http://host.docker.internal:8081"]
+      - targets: ["http://adguard"]
         labels:
           service: "AdGuard Home"
-      - targets: ["http://host.docker.internal:8080"]
+      - targets: ["http://passbolt"]
         labels:
           service: "Passbolt"
-      - targets: ["https://host.docker.internal:9443"]
+      - targets: ["https://portainer:9443"]
         labels:
           service: "Portainer"
     relabel_configs:

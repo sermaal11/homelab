@@ -41,6 +41,9 @@ services:
       - ${BLACKBOX_CONFIG_FILE:-/data/homelab/prometheus/blackbox.yml}:/etc/blackbox_exporter/config.yml:ro
     networks:
       - server-monitoring
+      - adguard
+      - passbolt
+      - portainer
 
   grafana:
     container_name: grafana
@@ -56,4 +59,13 @@ services:
 networks:
   server-monitoring:
     name: server-monitoring
+    external: true
+  adguard:
+    name: adguard_default
+    external: true
+  passbolt:
+    name: passbolt_default
+    external: true
+  portainer:
+    name: portainer_default
     external: true

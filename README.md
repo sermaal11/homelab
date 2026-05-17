@@ -52,18 +52,18 @@ El wrapper permite operaciones de escritura; el alcance real depende de los perm
 
 ## Comprobaciones De Servicios
 
-El stack de monitoring incluye Blackbox Exporter para comprobar servicios publicados en el host desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`.
+El stack de monitoring incluye Blackbox Exporter para comprobar servicios desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`. Para comprobar servicios de otros stacks, el contenedor tambien se une a las redes externas `adguard_default`, `passbolt_default` y `portainer_default`.
 
 Targets actuales del job `service-health`:
 
 | Servicio | Target |
 | --- | --- |
 | Home Assistant | `http://host.docker.internal:8123` |
-| Grafana | `http://host.docker.internal:3000/api/health` |
-| Prometheus | `http://host.docker.internal:9090/-/ready` |
-| AdGuard Home | `http://host.docker.internal:8081` |
-| Passbolt | `http://host.docker.internal:8080` |
-| Portainer | `https://host.docker.internal:9443` |
+| Grafana | `http://grafana:3000/api/health` |
+| Prometheus | `http://prometheus:9090/-/ready` |
+| AdGuard Home | `http://adguard` |
+| Passbolt | `http://passbolt` |
+| Portainer | `https://portainer:9443` |
 
 El modulo `http_service` acepta respuestas correctas, redirects y respuestas de autenticacion como senal de que el servicio responde.
 
@@ -145,7 +145,7 @@ git status --short --ignored
 - `/data/docker` fue retirado; no debe reaparecer en nuevos compose.
 - AdGuard es dependencia DNS. Si se para y Portainer necesita clonar GitHub, puede requerir DNS externo temporal en Tailscale y reinicio de Portainer para refrescar DNS de Docker.
 - La red `server-monitoring` es externa porque existia antes del stack de monitoring.
-- El stack `server_monitoring` se despliega desde Portainer/GitHub. Blackbox Exporter se ejecuta dentro de esa red y comprueba servicios publicados en el host mediante `host.docker.internal`; no expone puerto al host.
+- El stack `server_monitoring` se despliega desde Portainer/GitHub. Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion
