@@ -67,6 +67,22 @@ Targets actuales del job `service-health`:
 
 El modulo `http_service` acepta respuestas correctas, redirects y respuestas de autenticacion como senal de que el servicio responde.
 
+## Dashboard Homelab
+
+El dashboard `Homelab` de Grafana es el panel operativo principal. Actualmente esta organizado en estas secciones:
+
+| Seccion | Contenido |
+| --- | --- |
+| Vista general | Estado global, servicios online, CPU, memoria, temperatura, disco, red y uptime |
+| Procesador | Uso total y por nucleo fusionado, uso temporal y reparto de trabajo de CPU |
+| Temperaturas | Temperaturas actuales, evolucion termica y ventilador |
+| Almacenamiento | Uso por mountpoint, evolucion de uso, lectura/escritura y actividad de disco |
+| Red | Estado de enlace, velocidad, trafico, paquetes, errores y descartes |
+| Servicios | Online/caido, tiempo de respuesta, disponibilidad reciente, respuesta media, servicio mas lento y codigos HTTP |
+| Energia | Alimentacion AC/bateria, porcentaje de bateria y consumo |
+
+Los paneles de servicios usan el job Prometheus `service-health` y agrupan por `service` para evitar duplicados cuando cambian los targets. Los cambios de layout del dashboard se realizan via Grafana MCP y no estan versionados como JSON en este repositorio.
+
 ## Despliegue Desde Portainer
 
 Para los stacks de aplicacion:

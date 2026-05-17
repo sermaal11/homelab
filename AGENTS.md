@@ -33,6 +33,8 @@ Security audit checkpoint: README now documents the public-repo security posture
 
 Grafana MCP checkpoint: Codex is connected locally through `scripts/mcp-grafana.sh`; do not deploy this as a shared MCP service for other clients. The wrapper runs the official `grafana/mcp-grafana` Docker image in `stdio` mode on the external `server-monitoring` Docker network. Keep the real service account token only in ignored local file `grafana/mcp-grafana.env`; use `grafana/mcp-grafana.env.example` as the documented contract. The wrapper allows write operations, so the effective access level is controlled by the Grafana service account permissions.
 
+Grafana dashboard checkpoint: the `Homelab` dashboard is edited through Grafana MCP, not stored as dashboard JSON in Git. It currently includes a visual overview plus sections for processor, temperatures, storage, network, service health/latency/HTTP codes, and energy. Service panels must aggregate by `service` (for example `max by (service) (...)`) to avoid duplicate cards when probe targets change and old Prometheus series remain in the selected time range.
+
 ## Build, Test, and Development Commands
 
 - `docker compose -f portainer/docker-compose.yml config`: validate the Portainer Compose file.
