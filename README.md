@@ -29,7 +29,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `homeassistant/` | Portainer + GitHub |
 | AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `adguard/conf`, `adguard/work` | Portainer + GitHub |
 | Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `server_monitoring/grafana/data`, `server_monitoring/prometheus/data` | Portainer + GitHub |
-| n8n | `n8n/docker-compose.yml` | `http://homelab:5678` | `n8n/data`, `n8n/files` | CLI actual; Portainer pendiente |
+| n8n | `n8n/docker-compose.yml` | `http://homelab:5678` | `n8n/data`, `n8n/files` | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `passbolt/db`, `passbolt/gpg`, `passbolt/jwt` | Portainer + GitHub |
 
 ## MCP De Grafana
@@ -168,7 +168,7 @@ git status --short --ignored
 - El stack `server_monitoring` agrupa compose, configs y datos persistentes de Grafana y Prometheus bajo `server_monitoring/`.
 - El stack `server_monitoring` se despliega desde Portainer/GitHub usando `server_monitoring/docker-compose.yml`.
 - Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
-- n8n esta desplegado inicialmente por CLI para validar acceso manual en `http://homelab:5678`. En esta fase se usa solo para automatizaciones locales o salientes; para webhooks entrantes desde Internet hara falta HTTPS publico mediante Tailscale Funnel, Cloudflare Tunnel o reverse proxy.
+- n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. En esta fase se usa solo para automatizaciones locales o salientes; para webhooks entrantes desde Internet hara falta HTTPS publico mediante Tailscale Funnel, Cloudflare Tunnel o reverse proxy.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion
