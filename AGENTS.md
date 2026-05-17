@@ -21,7 +21,7 @@ Current migration checkpoint: Home Assistant has been deployed from GitHub throu
 
 AdGuard checkpoint: migrated to Portainer from GitHub using `/data/homelab/adguard` after temporarily removing AdGuard from Tailscale DNS and restarting Portainer so Docker picked up `1.1.1.1`; the new stack was validated with configuration preserved.
 
-Monitoring checkpoint: migrated to Portainer from GitHub with stack name `server_monitoring`. The Docker network `server-monitoring` predates the Compose stack and is external. Prometheus and Grafana required ownership fixes on `/data/homelab/prometheus/data` and `/data/homelab/grafana/data` after copying from old mounts/volumes; both services were validated in the browser afterward.
+Monitoring checkpoint: migrated to Portainer from GitHub with stack name `server_monitoring`. The Docker network `server-monitoring` predates the Compose stack and is external. Prometheus and Grafana required ownership fixes on `/data/homelab/prometheus/data` and `/data/homelab/grafana/data` after copying from old mounts/volumes; both services were validated in the browser afterward. Blackbox Exporter is part of the monitoring stack for HTTP service checks; it stays internal on `server-monitoring`, uses `host.docker.internal` via Docker `host-gateway`, and is scraped by Prometheus job `service-health`.
 
 Passbolt checkpoint: clean local/Tailscale install deployed from Portainer/GitHub using `PASSBOLT_BASE_URL=http://homelab:8080` and no SMTP for now. Previous Passbolt data was intentionally removed after the new install was validated. GPG/JWT directories required ownership adjustment to UID/GID `33:33`; UI loads and the initial admin user was created through the CLI registration link.
 
@@ -40,6 +40,7 @@ Grafana MCP checkpoint: Codex is connected locally through `scripts/mcp-grafana.
 - `docker compose -f portainer/docker-compose.yml logs -f`: follow Portainer logs.
 - `docker run --rm -v "$PWD/homeassistant:/config" ghcr.io/home-assistant/home-assistant:stable python -m homeassistant --script check_config --config /config`: validate Home Assistant configuration from the repository root.
 - `docker run --rm -v "$PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml" prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle`: smoke-test Prometheus startup with this config.
+- `docker run --rm --entrypoint blackbox_exporter -v "$PWD/prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml" prom/blackbox-exporter:latest --config.check --config.file=/etc/blackbox_exporter/config.yml`: validate the Blackbox Exporter config.
 - `codex mcp get grafana`: verify the Grafana MCP launcher is registered in the local Codex config after running `codex mcp add grafana -- /data/homelab/scripts/mcp-grafana.sh`.
 
 Use service-specific Docker commands when no wrapper script exists.

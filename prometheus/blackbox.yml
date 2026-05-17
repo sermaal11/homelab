@@ -1,0 +1,18 @@
+modules:
+  http_service:
+    prober: http
+    timeout: 5s
+    http:
+      follow_redirects: true
+      valid_status_codes:
+        - 200
+        - 204
+        - 301
+        - 302
+        - 303
+        - 307
+        - 308
+        - 401
+        - 403
+      tls_config:
+        insecure_skip_verify: true

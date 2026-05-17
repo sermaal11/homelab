@@ -17,7 +17,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Gestion | Portainer | Gestion de stacks Docker y operaciones desde UI |
 | Automatizacion | Home Assistant | Integraciones, automatizaciones y paneles domesticos |
 | Red | AdGuard Home | DNS local, filtrado y resolucion para el homelab |
-| Observabilidad | Prometheus, Node Exporter, Grafana | Metricas, scraping y dashboards |
+| Observabilidad | Prometheus, Node Exporter, Blackbox Exporter, Grafana | Metricas, comprobaciones de servicios y dashboards |
 | Secretos | Passbolt | Password manager local/Tailscale, pendiente de SMTP real |
 
 ## Inventario
@@ -26,8 +26,8 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | --- | --- | --- | --- | --- |
 | Portainer | `portainer/docker-compose.yml` | `https://homelab:9443` | `/data/homelab/portainer/data` | Git + CLI |
 | Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `/data/homelab/homeassistant` | Portainer + GitHub |
-| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
-| Monitoring | `prometheus/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100` | `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
+| AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:8081`; setup `3001` | `/data/homelab/adguard/conf`, `/data/homelab/adguard/work` | Portainer + GitHub |
+| Monitoring | `prometheus/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `/data/homelab/grafana/data`, `/data/homelab/prometheus/data` | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `/data/homelab/passbolt/db`, `/data/homelab/passbolt/gpg`, `/data/homelab/passbolt/jwt` | Portainer + GitHub |
 
 ## MCP De Grafana
@@ -49,6 +49,23 @@ codex mcp add grafana -- /data/homelab/scripts/mcp-grafana.sh
 ```
 
 El wrapper permite operaciones de escritura; el alcance real depende de los permisos del service account configurado en Grafana.
+
+## Comprobaciones De Servicios
+
+El stack de monitoring incluye Blackbox Exporter para comprobar servicios publicados en el host desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`.
+
+Targets actuales del job `service-health`:
+
+| Servicio | Target |
+| --- | --- |
+| Home Assistant | `http://host.docker.internal:8123` |
+| Grafana | `http://host.docker.internal:3000/api/health` |
+| Prometheus | `http://host.docker.internal:9090/-/ready` |
+| AdGuard Home | `http://host.docker.internal:8081` |
+| Passbolt | `http://host.docker.internal:8080` |
+| Portainer | `https://host.docker.internal:9443` |
+
+El modulo `http_service` acepta respuestas correctas, redirects y respuestas de autenticacion como senal de que el servicio responde.
 
 ## Despliegue Desde Portainer
 
@@ -75,7 +92,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | --- | --- |
 | Home Assistant | `TZ`, `HOMEASSISTANT_CONFIG_DIR` |
 | AdGuard Home | `ADGUARD_DNS_PORT`, `ADGUARD_WEB_PORT`, `ADGUARD_SETUP_PORT`, `ADGUARD_WORK_DIR`, `ADGUARD_CONF_DIR` |
-| Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR` |
+| Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
@@ -128,6 +145,7 @@ git status --short --ignored
 - `/data/docker` fue retirado; no debe reaparecer en nuevos compose.
 - AdGuard es dependencia DNS. Si se para y Portainer necesita clonar GitHub, puede requerir DNS externo temporal en Tailscale y reinicio de Portainer para refrescar DNS de Docker.
 - La red `server-monitoring` es externa porque existia antes del stack de monitoring.
+- El stack `server_monitoring` se despliega desde Portainer/GitHub. Blackbox Exporter se ejecuta dentro de esa red y comprueba servicios publicados en el host mediante `host.docker.internal`; no expone puerto al host.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion
@@ -160,6 +178,7 @@ Prometheus:
 
 ```bash
 docker run --rm --entrypoint promtool -v "$PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml" prom/prometheus:latest check config /etc/prometheus/prometheus.yml
+docker run --rm --entrypoint blackbox_exporter -v "$PWD/prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml" prom/blackbox-exporter:latest --config.check --config.file=/etc/blackbox_exporter/config.yml
 ```
 
 Estado general:
