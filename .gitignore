@@ -48,6 +48,11 @@ adguard/conf/AdGuardHome.yaml
 # Portainer persisted data
 portainer/data/
 
+# n8n local config and persisted data
+n8n/.env
+n8n/data/
+n8n/files/
+
 # Passbolt persisted data and key material
 passbolt/db/
 passbolt/gpg/
