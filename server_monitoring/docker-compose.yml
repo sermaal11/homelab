@@ -42,6 +42,7 @@ services:
     networks:
       - server-monitoring
       - adguard
+      - n8n
       - passbolt
       - portainer
 
@@ -62,6 +63,9 @@ networks:
     external: true
   adguard:
     name: adguard_default
+    external: true
+  n8n:
+    name: n8n_default
     external: true
   passbolt:
     name: passbolt_default

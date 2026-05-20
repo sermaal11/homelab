@@ -54,7 +54,7 @@ El wrapper permite operaciones de escritura; el alcance real depende de los perm
 
 ## Comprobaciones De Servicios
 
-El stack de monitoring incluye Blackbox Exporter para comprobar servicios desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`. Para comprobar servicios de otros stacks, el contenedor tambien se une a las redes externas `adguard_default`, `passbolt_default` y `portainer_default`.
+El stack de monitoring incluye Blackbox Exporter para comprobar servicios desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`. Para comprobar servicios de otros stacks, el contenedor tambien se une a las redes externas `adguard_default`, `n8n_default`, `passbolt_default` y `portainer_default`.
 
 Targets actuales del job `service-health`:
 
@@ -64,6 +64,7 @@ Targets actuales del job `service-health`:
 | Grafana | `http://grafana:3000/api/health` |
 | Prometheus | `http://prometheus:9090/-/ready` |
 | AdGuard Home | `http://adguard:3000` |
+| n8n | `http://n8n:5678` |
 | Passbolt | `http://passbolt` |
 | Portainer | `https://portainer:9443` |
 

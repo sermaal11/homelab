@@ -23,6 +23,9 @@ scrape_configs:
       - targets: ["http://adguard:3000"]
         labels:
           service: "AdGuard Home"
+      - targets: ["http://n8n:5678"]
+        labels:
+          service: "n8n"
       - targets: ["http://passbolt"]
         labels:
           service: "Passbolt"
