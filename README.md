@@ -54,6 +54,8 @@ El wrapper permite operaciones de escritura; el alcance real depende de los perm
 
 ## Comprobaciones De Servicios
 
+El stack de monitoring monta sus rutas persistentes de forma explicita bajo `/data/homelab/server_monitoring` para evitar variables heredadas antiguas en Portainer.
+
 El stack de monitoring incluye Blackbox Exporter para comprobar servicios desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`. Para comprobar servicios de otros stacks, el contenedor tambien se une a las redes externas `adguard_default`, `n8n_default`, `passbolt_default` y `portainer_default`.
 
 Targets actuales del job `service-health`:
