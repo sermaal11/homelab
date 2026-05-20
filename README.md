@@ -160,7 +160,7 @@ git status --short --ignored
 | Home Assistant usa `network_mode: host` y `privileged` | Discovery local y Bluetooth | Mantenerlo solo en host confiable; no exponer directamente a Internet |
 | Node Exporter monta `/` como lectura | Necesario para metricas host | Mount read-only y red interna de monitoring |
 | AdGuard publica DNS `53` | Es DNS del homelab | Evitar exponer `53` fuera de LAN/Tailscale |
-| n8n usa HTTP local y `N8N_SECURE_COOKIE=false` | Fase local/Tailscale sin HTTPS para automatizaciones salientes | Antes de exponer webhooks publicos, activar HTTPS y usar cookies seguras |
+| n8n UI usa HTTP local y `N8N_SECURE_COOKIE=false` | La UI sigue restringida a LAN/Tailscale; solo `/webhook` se publica via Tailscale Funnel HTTPS en `8443` para integraciones externas | No exponer la UI completa sin HTTPS/cookies seguras y autenticacion fuerte |
 | Passbolt usa HTTP local | Instalacion local/Tailscale inicial | Antes de Funnel, cambiar `PASSBOLT_BASE_URL` a URL publica HTTPS y configurar SMTP real |
 
 ## Operacion
@@ -171,7 +171,7 @@ git status --short --ignored
 - El stack `server_monitoring` agrupa compose, configs y datos persistentes de Grafana y Prometheus bajo `server_monitoring/`.
 - El stack `server_monitoring` se despliega desde Portainer/GitHub usando `server_monitoring/docker-compose.yml`.
 - Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
-- n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. En esta fase se usa solo para automatizaciones locales o salientes; para webhooks entrantes desde Internet hara falta HTTPS publico mediante Tailscale Funnel, Cloudflare Tunnel o reverse proxy.
+- n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. La UI sigue accesible localmente en `http://homelab:5678`; los webhooks entrantes usan `WEBHOOK_URL=https://homelab.tail5e76d5.ts.net:8443/` y se publican por Tailscale Funnel en la ruta `/webhook`, que se enruta a `http://localhost:5678`.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion
