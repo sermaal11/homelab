@@ -18,7 +18,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Automatizacion | Home Assistant | Integraciones, automatizaciones y paneles domesticos |
 | Red | AdGuard Home | DNS local, filtrado y resolucion para el homelab |
 | Observabilidad | Prometheus, Node Exporter, Blackbox Exporter, Grafana | Metricas, comprobaciones de servicios y dashboards |
-| Automatizacion | n8n | Automatizaciones internas y llamadas salientes a APIs externas |
+| Automatizacion | n8n, Redis | Automatizaciones internas, webhooks y buffers temporales para flujos conversacionales |
 | Secretos | Passbolt | Password manager local/Tailscale, pendiente de SMTP real |
 
 ## Inventario
@@ -29,7 +29,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Home Assistant | `homeassistant/docker-compose.yml` | `http://homelab:8123` | `homeassistant/` | Portainer + GitHub |
 | AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `adguard/conf`, `adguard/work` | Portainer + GitHub |
 | Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `server_monitoring/grafana/data`, `server_monitoring/prometheus/data` | Portainer + GitHub |
-| n8n | `n8n/docker-compose.yml` | `http://homelab:5678` | `n8n/data`, `n8n/files` | Portainer + GitHub |
+| n8n | `n8n/docker-compose.yml` | `http://homelab:5678`; Redis interno sin puerto publicado | `n8n/data`, `n8n/files`; Redis efimero | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `passbolt/db`, `passbolt/gpg`, `passbolt/jwt` | Portainer + GitHub |
 
 ## MCP De Grafana
@@ -115,7 +115,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | AdGuard Home | `ADGUARD_DNS_PORT`, `ADGUARD_WEB_PORT`, `ADGUARD_SETUP_PORT`, `ADGUARD_WORK_DIR`, `ADGUARD_CONF_DIR` |
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
-| n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE` |
+| n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE`, `LINKEDIN_INTAKE_DEBOUNCE_SECONDS` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
 
@@ -172,6 +172,7 @@ git status --short --ignored
 - El stack `server_monitoring` se despliega desde Portainer/GitHub usando `server_monitoring/docker-compose.yml`.
 - Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
 - n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. La UI sigue accesible localmente en `http://homelab:5678`; los webhooks entrantes usan `WEBHOOK_URL=https://homelab.tail5e76d5.ts.net:8443/` y se publican por Tailscale Funnel en la ruta `/webhook`, que se enruta a `http://localhost:5678`.
+- El stack de n8n incluye un Redis interno y sin puerto publicado para buffers temporales de automatizaciones. El flujo de LinkedIn lo usa como debounce de mensajes Telegram: agrupa mensajes consecutivos durante `LINKEDIN_INTAKE_DEBOUNCE_SECONDS` antes de llamar a Groq.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion

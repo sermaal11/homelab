@@ -3,6 +3,8 @@ services:
     container_name: n8n
     image: docker.n8n.io/n8nio/n8n:latest
     restart: unless-stopped
+    depends_on:
+      - redis
     ports:
       - "${N8N_PORT:-5678}:5678"
     environment:
@@ -15,6 +17,18 @@ services:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_SECURE_COOKIE=${N8N_SECURE_COOKIE:-false}
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - LINKEDIN_INTAKE_DEBOUNCE_SECONDS=${LINKEDIN_INTAKE_DEBOUNCE_SECONDS:-90}
     volumes:
       - ${N8N_DATA_DIR:-/data/homelab/n8n/data}:/home/node/.n8n
       - ${N8N_FILES_DIR:-/data/homelab/n8n/files}:/files
+
+  redis:
+    container_name: n8n-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
