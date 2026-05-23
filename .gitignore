@@ -55,6 +55,11 @@ n8n/.env
 n8n/data/
 n8n/files/
 
+# Nextcloud local config and persisted data
+nextcloud/.env
+nextcloud/html/
+nextcloud/db/
+
 # GitHub MCP local token
 github/mcp.env
 github/mcp.env.*

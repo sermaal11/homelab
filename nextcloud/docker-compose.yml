@@ -1,0 +1,66 @@
+services:
+  nextcloud-db:
+    container_name: nextcloud-db
+    image: mariadb:11.4
+    restart: unless-stopped
+    command: ["--transaction-isolation=READ-COMMITTED", "--binlog-format=ROW"]
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "true"
+      MYSQL_DATABASE: ${NEXTCLOUD_DB_NAME:-nextcloud}
+      MYSQL_USER: ${NEXTCLOUD_DB_USER:-nextcloud}
+      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:?Set NEXTCLOUD_DB_PASSWORD in nextcloud/.env}
+    volumes:
+      - ${NEXTCLOUD_DB_DIR:-/data/homelab/nextcloud/db}:/var/lib/mysql
+
+  nextcloud-redis:
+    container_name: nextcloud-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nextcloud:
+    container_name: nextcloud
+    image: nextcloud:stable-apache
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-db
+      - nextcloud-redis
+    ports:
+      - "${NEXTCLOUD_HTTP_PORT:-8082}:80"
+    environment:
+      MYSQL_DATABASE: ${NEXTCLOUD_DB_NAME:-nextcloud}
+      MYSQL_USER: ${NEXTCLOUD_DB_USER:-nextcloud}
+      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:?Set NEXTCLOUD_DB_PASSWORD in nextcloud/.env}
+      MYSQL_HOST: nextcloud-db
+      REDIS_HOST: nextcloud-redis
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS:-homelab}
+      OVERWRITEHOST: ${NEXTCLOUD_OVERWRITEHOST:-homelab:8082}
+      OVERWRITEPROTOCOL: ${NEXTCLOUD_OVERWRITEPROTOCOL:-http}
+      PHP_MEMORY_LIMIT: ${NEXTCLOUD_PHP_MEMORY_LIMIT:-512M}
+      PHP_UPLOAD_LIMIT: ${NEXTCLOUD_PHP_UPLOAD_LIMIT:-10G}
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - ${NEXTCLOUD_HTML_DIR:-/data/homelab/nextcloud/html}:/var/www/html
+
+  nextcloud-cron:
+    container_name: nextcloud-cron
+    image: nextcloud:stable-apache
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-db
+      - nextcloud-redis
+    entrypoint: /cron.sh
+    environment:
+      MYSQL_DATABASE: ${NEXTCLOUD_DB_NAME:-nextcloud}
+      MYSQL_USER: ${NEXTCLOUD_DB_USER:-nextcloud}
+      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:?Set NEXTCLOUD_DB_PASSWORD in nextcloud/.env}
+      MYSQL_HOST: nextcloud-db
+      REDIS_HOST: nextcloud-redis
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - ${NEXTCLOUD_HTML_DIR:-/data/homelab/nextcloud/html}:/var/www/html

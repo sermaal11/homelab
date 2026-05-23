@@ -20,6 +20,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Observabilidad | Prometheus, Node Exporter, Blackbox Exporter, Grafana | Metricas, comprobaciones de servicios y dashboards |
 | Automatizacion | n8n, Redis | Automatizaciones internas, webhooks y buffers temporales para flujos conversacionales |
 | Secretos | Passbolt | Password manager local/Tailscale, pendiente de SMTP real |
+| Archivos | Nextcloud, MariaDB, Redis | Nube privada tipo Drive para documentos y ficheros |
 
 ## Inventario
 
@@ -31,6 +32,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `server_monitoring/grafana/data`, `server_monitoring/prometheus/data` | Portainer + GitHub |
 | n8n | `n8n/docker-compose.yml` | `http://homelab:5678`; Redis interno sin puerto publicado | `n8n/data`, `n8n/files`; Redis efimero | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `passbolt/db`, `passbolt/gpg`, `passbolt/jwt` | Portainer + GitHub |
+| Nextcloud | `nextcloud/docker-compose.yml` | `http://homelab:8082` cuando se despliegue | `nextcloud/html`, `nextcloud/db`; Redis efimero | Portainer + GitHub, preparado pendiente de despliegue |
 
 ## MCP De Grafana
 
@@ -146,6 +148,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
 | n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE` |
+| Nextcloud | `NEXTCLOUD_HTTP_PORT`, `NEXTCLOUD_TRUSTED_DOMAINS`, `NEXTCLOUD_OVERWRITEHOST`, `NEXTCLOUD_OVERWRITEPROTOCOL`, `NEXTCLOUD_DB_NAME`, `NEXTCLOUD_DB_USER`, `NEXTCLOUD_DB_PASSWORD`, `NEXTCLOUD_HTML_DIR`, `NEXTCLOUD_DB_DIR` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
 
@@ -205,6 +208,7 @@ git status --short --ignored
 - n8n queda intencionadamente vacio de workflows y Data Tables despues de retirar la automatizacion anterior de LinkedIn. El stack conserva Redis interno sin puerto publicado y se mantienen las credenciales existentes de Redis, Groq y Telegram por si se reutilizan en futuros flujos.
 - Queda como idea futura desarrollar un nuevo flujo de posts para LinkedIn desde cero, con un enfoque mas simple y menos centrado en ingenieria que el pipeline anterior.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
+- Nextcloud esta preparado como stack Compose en `nextcloud/docker-compose.yml`, pendiente de despliegue desde Portainer/GitHub. Usara `http://homelab:8082`, MariaDB persistente, Redis efimero y datos bajo `/data/homelab/nextcloud`.
 
 ## Validacion
 
@@ -216,6 +220,7 @@ docker compose --env-file homeassistant/.env -f homeassistant/docker-compose.yml
 docker compose --env-file adguard/.env -f adguard/docker-compose.yml config
 docker compose -p server_monitoring --env-file server_monitoring/.env -f server_monitoring/docker-compose.yml config
 docker compose --env-file n8n/.env -f n8n/docker-compose.yml config
+docker compose --env-file nextcloud/.env -f nextcloud/docker-compose.yml config
 docker compose --env-file passbolt/.env -f passbolt/docker-compose.yml config
 ```
 
