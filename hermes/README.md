@@ -24,9 +24,9 @@ Generate the gateway API key:
 openssl rand -hex 32
 ```
 
-Create a Telegram bot with BotFather and put the token in `TELEGRAM_BOT_TOKEN`. Put your numeric Telegram user ID in `TELEGRAM_ALLOWED_USERS`; only that user should be allowed in v1.
+Only `HERMES_API_SERVER_KEY` is required for the container to render its compose config. Model provider, Telegram, Home Assistant, and Grafana credentials can be configured inside Hermes after the first boot. If you prefer env-based setup, fill `OPENROUTER_API_KEY` or `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, and `HOMEASSISTANT_TOKEN` before deploying.
 
-Provide either `OPENROUTER_API_KEY` or `OPENAI_API_KEY`. Reuse the Home Assistant long-lived access token in `HOMEASSISTANT_TOKEN`. Keep `GRAFANA_SERVICE_ACCOUNT_TOKEN` empty until Grafana API access is explicitly enabled.
+Hermes can also be authenticated/configured from its dashboard or CLI after the persistent data directory exists. This is the preferred path when no OpenAI/OpenRouter key is available yet.
 
 ## Deployment
 

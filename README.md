@@ -128,7 +128,7 @@ cp hermes/.env.example hermes/.env
 openssl rand -hex 32
 ```
 
-Guardar el valor generado como `HERMES_API_SERVER_KEY`, anadir un token de BotFather en `TELEGRAM_BOT_TOKEN`, restringir `TELEGRAM_ALLOWED_USERS` al ID numerico de Sergio y configurar al menos una API key de modelo (`OPENROUTER_API_KEY` u `OPENAI_API_KEY`). Reutilizar el long-lived access token de Home Assistant en `HOMEASSISTANT_TOKEN`. El token de Grafana puede quedar vacio en el primer arranque.
+Guardar el valor generado como `HERMES_API_SERVER_KEY`. El contenedor puede arrancar sin API key de OpenAI/OpenRouter; el modelo, Telegram, Home Assistant y Grafana se pueden configurar despues desde Hermes/dashboard/CLI o, si se prefiere, rellenando `hermes/.env` antes del despliegue.
 
 El contenedor no monta `/var/run/docker.sock` y no ve `/data/homelab` directamente. Su scope de ficheros inicial es su propio workspace persistente bajo `hermes/data`. Las plantillas iniciales de identidad, memoria y MCP viven en `hermes/bootstrap/`; despues del primer arranque se copian a `hermes/data` y se ajustan desde el dashboard si Hermes cambia su formato.
 
@@ -209,7 +209,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
 | n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE` |
-| Hermes Agent | `HERMES_GATEWAY_PORT`, `HERMES_DASHBOARD_PORT`, `HERMES_DATA_DIR`, `HERMES_API_SERVER_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `HOMEASSISTANT_TOKEN`, `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN` |
+| Hermes Agent | `HERMES_GATEWAY_PORT`, `HERMES_DASHBOARD_PORT`, `HERMES_DATA_DIR`, `HERMES_API_SERVER_KEY`; opcionales `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `HOMEASSISTANT_TOKEN`, `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN` |
 | Nextcloud | `NEXTCLOUD_HTTP_PORT`, `NEXTCLOUD_TRUSTED_DOMAINS`, `NEXTCLOUD_OVERWRITEHOST`, `NEXTCLOUD_OVERWRITEPROTOCOL`, `NEXTCLOUD_DB_NAME`, `NEXTCLOUD_DB_USER`, `NEXTCLOUD_DB_PASSWORD`, `NEXTCLOUD_HTML_DIR`, `NEXTCLOUD_DB_DIR` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
@@ -270,7 +270,7 @@ git status --short --ignored
 - n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. La UI sigue accesible localmente en `http://homelab:5678`; los webhooks entrantes usan `WEBHOOK_URL=https://homelab.tail5e76d5.ts.net:8443/` y se publican por Tailscale Funnel en la ruta `/webhook`, que se enruta a `http://localhost:5678`.
 - n8n queda intencionadamente vacio de workflows y Data Tables despues de retirar la automatizacion anterior de LinkedIn. El stack conserva Redis interno sin puerto publicado y se mantienen las credenciales existentes de Redis, Groq y Telegram por si se reutilizan en futuros flujos.
 - Queda como idea futura desarrollar un nuevo flujo de posts para LinkedIn desde cero, con un enfoque mas simple y menos centrado en ingenieria que el pipeline anterior.
-- Hermes se despliega desde Portainer/GitHub usando `hermes/docker-compose.yml`, queda accesible localmente en `http://homelab:8642` y `http://homelab:9119`, persiste en `/data/homelab/hermes/data`, usa Telegram polling y no monta Docker socket. El despliegue inicial requiere `hermes/.env` con BotFather token, allowed user ID, API key de modelo y token de Home Assistant.
+- Hermes se despliega desde Portainer/GitHub usando `hermes/docker-compose.yml`, queda accesible localmente en `http://homelab:8642` y `http://homelab:9119`, persiste en `/data/homelab/hermes/data`, puede usar Telegram polling y no monta Docker socket. El despliegue inicial solo requiere `HERMES_API_SERVER_KEY`; modelo, Telegram, Home Assistant y Grafana pueden configurarse dentro de Hermes despues del primer arranque.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 - Nextcloud esta desplegado desde Portainer/GitHub usando `nextcloud/docker-compose.yml`, accesible en `http://homelab:8082`, con MariaDB persistente, Redis efimero y datos bajo `/data/homelab/nextcloud`. La instalacion inicial se completo en la UI, `occ status` reporta `installed: true`, `maintenance: false`, `needsDbUpgrade: false`, el modo de trabajos en segundo plano esta en `cron`, y se valido una subida real con `occ files:scan --all` sin errores.
 
@@ -315,9 +315,6 @@ Hermes Agent:
 
 ```bash
 test -n "$(grep '^HERMES_API_SERVER_KEY=' hermes/.env | cut -d= -f2-)"
-test -n "$(grep '^TELEGRAM_BOT_TOKEN=' hermes/.env | cut -d= -f2-)"
-test -n "$(grep '^TELEGRAM_ALLOWED_USERS=' hermes/.env | cut -d= -f2-)"
-test -n "$(grep '^HOMEASSISTANT_TOKEN=' hermes/.env | cut -d= -f2-)"
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml ps
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml logs -f
 ```
