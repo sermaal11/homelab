@@ -32,7 +32,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `server_monitoring/grafana/data`, `server_monitoring/prometheus/data` | Portainer + GitHub |
 | n8n | `n8n/docker-compose.yml` | `http://homelab:5678`; Redis interno sin puerto publicado | `n8n/data`, `n8n/files`; Redis efimero | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `passbolt/db`, `passbolt/gpg`, `passbolt/jwt` | Portainer + GitHub |
-| Nextcloud | `nextcloud/docker-compose.yml` | `http://homelab:8082` cuando se despliegue | `nextcloud/html`, `nextcloud/db`; Redis efimero | Portainer + GitHub, preparado pendiente de despliegue |
+| Nextcloud | `nextcloud/docker-compose.yml` | `http://homelab:8082` | `nextcloud/html`, `nextcloud/db`; Redis efimero | Portainer + GitHub |
 
 ## MCP De Grafana
 
@@ -208,7 +208,7 @@ git status --short --ignored
 - n8n queda intencionadamente vacio de workflows y Data Tables despues de retirar la automatizacion anterior de LinkedIn. El stack conserva Redis interno sin puerto publicado y se mantienen las credenciales existentes de Redis, Groq y Telegram por si se reutilizan en futuros flujos.
 - Queda como idea futura desarrollar un nuevo flujo de posts para LinkedIn desde cero, con un enfoque mas simple y menos centrado en ingenieria que el pipeline anterior.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
-- Nextcloud esta preparado como stack Compose en `nextcloud/docker-compose.yml`, pendiente de despliegue desde Portainer/GitHub. Usara `http://homelab:8082`, MariaDB persistente, Redis efimero y datos bajo `/data/homelab/nextcloud`.
+- Nextcloud esta desplegado desde Portainer/GitHub usando `nextcloud/docker-compose.yml`, accesible en `http://homelab:8082`, con MariaDB persistente, Redis efimero y datos bajo `/data/homelab/nextcloud`. La instalacion inicial se completo en la UI, `occ status` reporta `installed: true`, `maintenance: false`, `needsDbUpgrade: false`, el modo de trabajos en segundo plano esta en `cron`, y se valido una subida real con `occ files:scan --all` sin errores.
 
 ## Validacion
 
