@@ -3,6 +3,7 @@
 *.env
 !.env.example
 .codex-mcp.env
+AGENTS.md
 */AGENTS.md
 
 # Editor / OS noise
