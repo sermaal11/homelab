@@ -124,10 +124,16 @@ Compose path: <servicio>/docker-compose.yml
 
 Las variables reales se configuran en Portainer o en `.env` locales ignorados por Git. Los `.env.example` documentan el contrato esperado sin exponer secretos.
 
+Para operaciones Git desde el host, el remoto local `origin` debe usar SSH para evitar prompts de usuario/password en entornos no interactivos:
+
+```bash
+git remote set-url origin git@github.com:sermaal11/homelab.git
+```
+
 Portainer se actualiza desde el host:
 
 ```bash
-git pull git@github.com:sermaal11/homelab.git main
+git pull origin main
 docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 ```
 

@@ -29,7 +29,7 @@ Passbolt checkpoint: clean local/Tailscale install deployed from Portainer/GitHu
 
 Portainer checkpoint: migrated last by CLI after refreshing `/data/homelab/portainer/data` from the live container. Current Portainer container mounts `/data/homelab/portainer/data:/data` and `/var/run/docker.sock:/var/run/docker.sock`.
 
-Portainer is managed Git-first but CLI-deployed, not self-managed by Portainer UI. To update it, pull from GitHub and run `docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d`; use explicit SSH remote `git@github.com:sermaal11/homelab.git` if the local `origin` remains HTTPS.
+Portainer is managed Git-first but CLI-deployed, not self-managed by Portainer UI. The local Git `origin` should be `git@github.com:sermaal11/homelab.git` so non-interactive pushes and pulls use SSH. To update Portainer, run `git pull origin main` and `docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d`.
 
 Security audit checkpoint: README now documents the public-repo security posture. No real secrets were found in tracked files or Git history during regex-based review; only ignored local `.env`, runtime data, databases, logs, Home Assistant secrets, AdGuard config, Grafana/Prometheus data, Portainer data, and Passbolt DB/GPG/JWT remain on disk.
 
