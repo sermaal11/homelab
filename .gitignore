@@ -58,6 +58,10 @@ n8n/.env
 n8n/data/
 n8n/files/
 
+# Hermes local config and persisted agent state
+hermes/.env
+hermes/data/
+
 # Nextcloud local config and persisted data
 nextcloud/.env
 nextcloud/html/

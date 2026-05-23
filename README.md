@@ -19,6 +19,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | Red | AdGuard Home | DNS local, filtrado y resolucion para el homelab |
 | Observabilidad | Prometheus, Node Exporter, Blackbox Exporter, Grafana | Metricas, comprobaciones de servicios y dashboards |
 | Automatizacion | n8n, Redis | Automatizaciones internas, webhooks y buffers temporales para flujos conversacionales |
+| Mayordomo | Hermes Agent | Agente personal Telegram-first con dashboard local y contexto del homelab |
 | Secretos | Passbolt | Password manager local/Tailscale, pendiente de SMTP real |
 | Archivos | Nextcloud, MariaDB, Redis | Nube privada tipo Drive para documentos y ficheros |
 
@@ -31,6 +32,7 @@ El homelab se organiza como stacks independientes por servicio. Portainer despli
 | AdGuard Home | `adguard/docker-compose.yml` | `http://homelab:3001` | `adguard/conf`, `adguard/work` | Portainer + GitHub |
 | Monitoring | `server_monitoring/docker-compose.yml` | Grafana `3000`, Prometheus `9090`, Node Exporter `9100`; Blackbox Exporter interno `9115` | `server_monitoring/grafana/data`, `server_monitoring/prometheus/data` | Portainer + GitHub |
 | n8n | `n8n/docker-compose.yml` | `http://homelab:5678`; Redis interno sin puerto publicado | `n8n/data`, `n8n/files`; Redis efimero | Portainer + GitHub |
+| Hermes Agent | `hermes/docker-compose.yml` | Gateway `http://homelab:8642`; dashboard `http://homelab:9119`; Telegram polling | `hermes/data` | Portainer + GitHub |
 | Passbolt | `passbolt/docker-compose.yml` | `http://homelab:8080` | `passbolt/db`, `passbolt/gpg`, `passbolt/jwt` | Portainer + GitHub |
 | Nextcloud | `nextcloud/docker-compose.yml` | `http://homelab:8082` | `nextcloud/html`, `nextcloud/db`; Redis efimero | Portainer + GitHub |
 
@@ -111,6 +113,31 @@ curl -i http://homelab:8123/api/mcp
 
 Un `405 Method Not Allowed` en `GET /api/mcp` indica que la integracion esta configurada y el endpoint existe; un `404` indica que falta configurar la integracion en Home Assistant.
 
+## Hermes Agent
+
+Hermes es el mayordomo personal Telegram-first del homelab. Se despliega como stack propio desde `hermes/docker-compose.yml`, usa la imagen oficial `nousresearch/hermes-agent:latest`, persiste todo su estado bajo `/data/homelab/hermes/data` y expone solo LAN/Tailscale:
+
+- Gateway/API: `http://homelab:8642`
+- Dashboard: `http://homelab:9119`
+- Telegram: polling mediante `TELEGRAM_BOT_TOKEN`
+
+Preparacion local:
+
+```bash
+cp hermes/.env.example hermes/.env
+openssl rand -hex 32
+```
+
+Guardar el valor generado como `HERMES_API_SERVER_KEY`, anadir un token de BotFather en `TELEGRAM_BOT_TOKEN`, restringir `TELEGRAM_ALLOWED_USERS` al ID numerico de Sergio y configurar al menos una API key de modelo (`OPENROUTER_API_KEY` u `OPENAI_API_KEY`). Reutilizar el long-lived access token de Home Assistant en `HOMEASSISTANT_TOKEN`. El token de Grafana puede quedar vacio en el primer arranque.
+
+El contenedor no monta `/var/run/docker.sock` y no ve `/data/homelab` directamente. Su scope de ficheros inicial es su propio workspace persistente bajo `hermes/data`. Las plantillas iniciales de identidad, memoria y MCP viven en `hermes/bootstrap/`; despues del primer arranque se copian a `hermes/data` y se ajustan desde el dashboard si Hermes cambia su formato.
+
+Reglas de seguridad del mayordomo:
+
+- Puede consultar estado, resumir contexto, revisar salud del homelab y gestionar listas de bajo riesgo.
+- Debe pedir confirmacion antes de enviar mensajes externos, publicar en LinkedIn, reiniciar servicios, mover/borrar archivos, cambiar automatizaciones o desplegar stacks.
+- Nunca debe tocar Passbolt, AdGuard/DNS, exposicion publica, reglas de red, Portainer con escritura o borrado masivo sin una instruccion directa explicita.
+
 ## Comprobaciones De Servicios
 
 El stack de monitoring monta sus rutas persistentes de forma explicita bajo `/data/homelab/server_monitoring` para evitar variables heredadas antiguas en Portainer.
@@ -182,6 +209,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
 | n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE` |
+| Hermes Agent | `HERMES_GATEWAY_PORT`, `HERMES_DASHBOARD_PORT`, `HERMES_DATA_DIR`, `HERMES_API_SERVER_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `HOMEASSISTANT_TOKEN`, `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN` |
 | Nextcloud | `NEXTCLOUD_HTTP_PORT`, `NEXTCLOUD_TRUSTED_DOMAINS`, `NEXTCLOUD_OVERWRITEHOST`, `NEXTCLOUD_OVERWRITEPROTOCOL`, `NEXTCLOUD_DB_NAME`, `NEXTCLOUD_DB_USER`, `NEXTCLOUD_DB_PASSWORD`, `NEXTCLOUD_HTML_DIR`, `NEXTCLOUD_DB_DIR` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
@@ -228,6 +256,7 @@ git status --short --ignored
 | Node Exporter monta `/` como lectura | Necesario para metricas host | Mount read-only y red interna de monitoring |
 | AdGuard publica DNS `53` | Es DNS del homelab | Evitar exponer `53` fuera de LAN/Tailscale |
 | n8n UI usa HTTP local y `N8N_SECURE_COOKIE=false` | La UI sigue restringida a LAN/Tailscale; solo `/webhook` se publica via Tailscale Funnel HTTPS en `8443` para integraciones externas | No exponer la UI completa sin HTTPS/cookies seguras y autenticacion fuerte |
+| Hermes expone gateway/dashboard en LAN | Necesario para Telegram gateway y administracion inicial | No publicar por Funnel/Internet; usar `TELEGRAM_ALLOWED_USERS`; no montar Docker socket; mantener tokens en `hermes/.env` |
 | Passbolt usa HTTP local | Instalacion local/Tailscale inicial | Antes de Funnel, cambiar `PASSBOLT_BASE_URL` a URL publica HTTPS y configurar SMTP real |
 
 ## Operacion
@@ -241,6 +270,7 @@ git status --short --ignored
 - n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. La UI sigue accesible localmente en `http://homelab:5678`; los webhooks entrantes usan `WEBHOOK_URL=https://homelab.tail5e76d5.ts.net:8443/` y se publican por Tailscale Funnel en la ruta `/webhook`, que se enruta a `http://localhost:5678`.
 - n8n queda intencionadamente vacio de workflows y Data Tables despues de retirar la automatizacion anterior de LinkedIn. El stack conserva Redis interno sin puerto publicado y se mantienen las credenciales existentes de Redis, Groq y Telegram por si se reutilizan en futuros flujos.
 - Queda como idea futura desarrollar un nuevo flujo de posts para LinkedIn desde cero, con un enfoque mas simple y menos centrado en ingenieria que el pipeline anterior.
+- Hermes se despliega desde Portainer/GitHub usando `hermes/docker-compose.yml`, queda accesible localmente en `http://homelab:8642` y `http://homelab:9119`, persiste en `/data/homelab/hermes/data`, usa Telegram polling y no monta Docker socket. El despliegue inicial requiere `hermes/.env` con BotFather token, allowed user ID, API key de modelo y token de Home Assistant.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 - Nextcloud esta desplegado desde Portainer/GitHub usando `nextcloud/docker-compose.yml`, accesible en `http://homelab:8082`, con MariaDB persistente, Redis efimero y datos bajo `/data/homelab/nextcloud`. La instalacion inicial se completo en la UI, `occ status` reporta `installed: true`, `maintenance: false`, `needsDbUpgrade: false`, el modo de trabajos en segundo plano esta en `cron`, y se valido una subida real con `occ files:scan --all` sin errores.
 
@@ -254,6 +284,7 @@ docker compose --env-file homeassistant/.env -f homeassistant/docker-compose.yml
 docker compose --env-file adguard/.env -f adguard/docker-compose.yml config
 docker compose -p server_monitoring --env-file server_monitoring/.env -f server_monitoring/docker-compose.yml config
 docker compose --env-file n8n/.env -f n8n/docker-compose.yml config
+docker compose --env-file hermes/.env -f hermes/docker-compose.yml config
 docker compose --env-file nextcloud/.env -f nextcloud/docker-compose.yml config
 docker compose --env-file passbolt/.env -f passbolt/docker-compose.yml config
 ```
@@ -278,6 +309,17 @@ Home Assistant:
 
 ```bash
 docker run --rm -v "$PWD/homeassistant:/config" ghcr.io/home-assistant/home-assistant:stable python -m homeassistant --script check_config --config /config
+```
+
+Hermes Agent:
+
+```bash
+test -n "$(grep '^HERMES_API_SERVER_KEY=' hermes/.env | cut -d= -f2-)"
+test -n "$(grep '^TELEGRAM_BOT_TOKEN=' hermes/.env | cut -d= -f2-)"
+test -n "$(grep '^TELEGRAM_ALLOWED_USERS=' hermes/.env | cut -d= -f2-)"
+test -n "$(grep '^HOMEASSISTANT_TOKEN=' hermes/.env | cut -d= -f2-)"
+docker compose --env-file hermes/.env -f hermes/docker-compose.yml ps
+docker compose --env-file hermes/.env -f hermes/docker-compose.yml logs -f
 ```
 
 Prometheus:
