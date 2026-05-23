@@ -78,6 +78,39 @@ Verificar:
 codex mcp get github
 ```
 
+## MCP De Home Assistant
+
+Home Assistant incluye un servidor MCP oficial en la integracion `Model Context Protocol Server`. No se despliega como contenedor aparte: cuando la integracion esta configurada en Home Assistant, Codex puede conectarse por HTTP a `http://homelab:8123/api/mcp` usando un long-lived access token.
+
+Preparacion local:
+
+```bash
+cp homeassistant/mcp.env.example homeassistant/mcp.env
+```
+
+Despues, en Home Assistant, anadir la integracion `Model Context Protocol Server` desde Settings -> Devices & services, crear un long-lived access token para Codex y guardarlo en `homeassistant/mcp.env` como `HOMEASSISTANT_TOKEN`. El archivo real queda ignorado por Git. Controlar que entidades puede ver o manejar el MCP desde la configuracion de entidades expuestas de Home Assistant/Assist.
+
+Registrar el MCP HTTP en Codex:
+
+```bash
+codex mcp add homeassistant --url http://homelab:8123/api/mcp --bearer-token-env-var HOMEASSISTANT_TOKEN
+```
+
+Para usarlo, iniciar Codex con el token cargado:
+
+```bash
+/data/homelab/scripts/codex-with-homeassistant-mcp.sh
+```
+
+Verificar:
+
+```bash
+codex mcp get homeassistant
+curl -i http://homelab:8123/api/mcp
+```
+
+Un `405 Method Not Allowed` en `GET /api/mcp` indica que la integracion esta configurada y el endpoint existe; un `404` indica que falta configurar la integracion en Home Assistant.
+
 ## Comprobaciones De Servicios
 
 El stack de monitoring monta sus rutas persistentes de forma explicita bajo `/data/homelab/server_monitoring` para evitar variables heredadas antiguas en Portainer.
@@ -231,6 +264,14 @@ Grafana MCP:
 docker network inspect server-monitoring
 test -n "$(grep '^GRAFANA_SERVICE_ACCOUNT_TOKEN=' server_monitoring/grafana/mcp-grafana.env | cut -d= -f2-)"
 codex mcp get grafana
+```
+
+Home Assistant MCP:
+
+```bash
+test -n "$(grep '^HOMEASSISTANT_TOKEN=' homeassistant/mcp.env | cut -d= -f2-)"
+codex mcp get homeassistant
+curl -i http://homelab:8123/api/mcp
 ```
 
 Home Assistant:

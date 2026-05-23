@@ -29,6 +29,9 @@ homeassistant/.storage/
 homeassistant/.cache/
 homeassistant/deps/
 homeassistant/tts/
+homeassistant/mcp.env
+homeassistant/mcp.env.*
+!homeassistant/mcp.env.example
 homeassistant/secrets.yaml
 homeassistant/home-assistant_v2.db*
 homeassistant/home-assistant.log*
