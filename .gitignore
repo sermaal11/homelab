@@ -2,8 +2,8 @@
 .env
 *.env
 !.env.example
-AGENTS.md
 .codex-mcp.env
+*/AGENTS.md
 
 # Editor / OS noise
 .DS_Store
@@ -53,6 +53,11 @@ portainer/data/
 n8n/.env
 n8n/data/
 n8n/files/
+
+# GitHub MCP local token
+github/mcp.env
+github/mcp.env.*
+!github/mcp.env.example
 
 # Passbolt persisted data and key material
 passbolt/db/

@@ -52,6 +52,30 @@ codex mcp add grafana -- /data/homelab/scripts/mcp-grafana.sh
 
 El wrapper permite operaciones de escritura; el alcance real depende de los permisos del service account configurado en Grafana.
 
+## MCP De GitHub
+
+El repositorio incluye un wrapper local para conectar Codex con el servidor MCP oficial de GitHub usando la imagen `ghcr.io/github/github-mcp-server`. No se despliega como servicio: Codex lo arranca bajo demanda en modo `stdio`. El token real vive solo en `github/mcp.env`, ignorado por Git.
+
+Preparacion local:
+
+```bash
+cp github/mcp.env.example github/mcp.env
+```
+
+Despues, crear un GitHub Personal Access Token con el minimo alcance necesario y guardarlo en `github/mcp.env` como `GITHUB_PERSONAL_ACCESS_TOKEN`. Por defecto el wrapper usa `GITHUB_TOOLSETS=default,actions`; el toolset `default` incluye contexto, repositorios, issues, pull requests y usuarios, y `actions` permite consultar GitHub Actions.
+
+Registrar el MCP local en Codex:
+
+```bash
+codex mcp add github -- /data/homelab/scripts/mcp-github.sh
+```
+
+Verificar:
+
+```bash
+codex mcp get github
+```
+
 ## Comprobaciones De Servicios
 
 El stack de monitoring monta sus rutas persistentes de forma explicita bajo `/data/homelab/server_monitoring` para evitar variables heredadas antiguas en Portainer.
@@ -115,7 +139,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | AdGuard Home | `ADGUARD_DNS_PORT`, `ADGUARD_WEB_PORT`, `ADGUARD_SETUP_PORT`, `ADGUARD_WORK_DIR`, `ADGUARD_CONF_DIR` |
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
-| n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE`, `LINKEDIN_INTAKE_DEBOUNCE_SECONDS` |
+| n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
 
@@ -172,7 +196,8 @@ git status --short --ignored
 - El stack `server_monitoring` se despliega desde Portainer/GitHub usando `server_monitoring/docker-compose.yml`.
 - Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
 - n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. La UI sigue accesible localmente en `http://homelab:5678`; los webhooks entrantes usan `WEBHOOK_URL=https://homelab.tail5e76d5.ts.net:8443/` y se publican por Tailscale Funnel en la ruta `/webhook`, que se enruta a `http://localhost:5678`.
-- El stack de n8n incluye un Redis interno y sin puerto publicado para buffers temporales de automatizaciones. El flujo de LinkedIn lo usa como debounce de mensajes Telegram: agrupa mensajes consecutivos durante `LINKEDIN_INTAKE_DEBOUNCE_SECONDS` antes de llamar a Groq.
+- n8n queda intencionadamente vacio de workflows y Data Tables despues de retirar la automatizacion anterior de LinkedIn. El stack conserva Redis interno sin puerto publicado y se mantienen las credenciales existentes de Redis, Groq y Telegram por si se reutilizan en futuros flujos.
+- Queda como idea futura desarrollar un nuevo flujo de posts para LinkedIn desde cero, con un enfoque mas simple y menos centrado en ingenieria que el pipeline anterior.
 - Passbolt no tiene SMTP por ahora; el primer admin se creo por CLI. SMTP se configurara cuando se exponga con Tailscale Funnel o dominio publico.
 
 ## Validacion
