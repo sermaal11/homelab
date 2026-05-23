@@ -29,6 +29,9 @@ scrape_configs:
       - targets: ["http://passbolt"]
         labels:
           service: "Passbolt"
+      - targets: ["http://nextcloud/status.php"]
+        labels:
+          service: "Nextcloud"
       - targets: ["https://portainer:9443"]
         labels:
           service: "Portainer"

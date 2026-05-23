@@ -44,6 +44,7 @@ services:
       - adguard
       - n8n
       - passbolt
+      - nextcloud
       - portainer
 
   grafana:
@@ -69,6 +70,9 @@ networks:
     external: true
   passbolt:
     name: passbolt_default
+    external: true
+  nextcloud:
+    name: nextcloud_default
     external: true
   portainer:
     name: portainer_default

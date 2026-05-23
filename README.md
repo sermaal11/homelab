@@ -82,7 +82,7 @@ codex mcp get github
 
 El stack de monitoring monta sus rutas persistentes de forma explicita bajo `/data/homelab/server_monitoring` para evitar variables heredadas antiguas en Portainer.
 
-El stack de monitoring incluye Blackbox Exporter para comprobar servicios desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`. Para comprobar servicios de otros stacks, el contenedor tambien se une a las redes externas `adguard_default`, `n8n_default`, `passbolt_default` y `portainer_default`.
+El stack de monitoring incluye Blackbox Exporter para comprobar servicios desde Prometheus. El exporter no publica puerto al host; Prometheus lo consulta dentro de la red `server-monitoring` en `blackbox-exporter:9115`. Para comprobar servicios de otros stacks, el contenedor tambien se une a las redes externas `adguard_default`, `n8n_default`, `passbolt_default`, `nextcloud_default` y `portainer_default`.
 
 Targets actuales del job `service-health`:
 
@@ -94,6 +94,7 @@ Targets actuales del job `service-health`:
 | AdGuard Home | `http://adguard:3000` |
 | n8n | `http://n8n:5678` |
 | Passbolt | `http://passbolt` |
+| Nextcloud | `http://nextcloud/status.php` |
 | Portainer | `https://portainer:9443` |
 
 El modulo `http_service` acepta respuestas correctas, redirects y respuestas de autenticacion como senal de que el servicio responde.
@@ -203,7 +204,7 @@ git status --short --ignored
 - La red `server-monitoring` es externa porque existia antes del stack de monitoring.
 - El stack `server_monitoring` agrupa compose, configs y datos persistentes de Grafana y Prometheus bajo `server_monitoring/`.
 - El stack `server_monitoring` se despliega desde Portainer/GitHub usando `server_monitoring/docker-compose.yml`.
-- Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal` y no expone puerto al host.
+- Blackbox Exporter se ejecuta dentro de `server-monitoring`, usa redes externas de los stacks comprobados cuando aplica, comprueba Home Assistant mediante `host.docker.internal`, comprueba Nextcloud con `/status.php` para evitar redirects al host LAN, y no expone puerto al host.
 - n8n se despliega desde Portainer/GitHub usando `n8n/docker-compose.yml`. La UI sigue accesible localmente en `http://homelab:5678`; los webhooks entrantes usan `WEBHOOK_URL=https://homelab.tail5e76d5.ts.net:8443/` y se publican por Tailscale Funnel en la ruta `/webhook`, que se enruta a `http://localhost:5678`.
 - n8n queda intencionadamente vacio de workflows y Data Tables despues de retirar la automatizacion anterior de LinkedIn. El stack conserva Redis interno sin puerto publicado y se mantienen las credenciales existentes de Redis, Groq y Telegram por si se reutilizan en futuros flujos.
 - Queda como idea futura desarrollar un nuevo flujo de posts para LinkedIn desde cero, con un enfoque mas simple y menos centrado en ingenieria que el pipeline anterior.
