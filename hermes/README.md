@@ -12,6 +12,13 @@ Current runtime model setup: OpenAI Codex `gpt-5.5` is the primary model and Gro
 
 Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes reaches it inside the stack network as `http://honcho-api:8000`. Runtime status: Hermes has `memory.provider=honcho`, workspace `homelab`, user peer `Sergio`, AI peer `Jared`, `hybrid` recall, and `async` writes.
 
+Active MCP servers:
+
+- `homeassistant_mcp`: `http://host.docker.internal:8123/api/mcp`
+- `n8n`: `http://host.docker.internal:5678/mcp-server/http`
+
+Their bearer tokens are stored only in the ignored persistent Hermes `.env`. Telegram currently allows the lightweight core toolsets plus these two MCP servers.
+
 Do not expose Hermes with Tailscale Funnel or public HTTPS until its auth, approval, memory, and tool permissions have been reviewed.
 
 ## Preparation

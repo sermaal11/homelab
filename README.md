@@ -125,6 +125,8 @@ Estado actual: Hermes usa OpenAI Codex con `gpt-5.5` como modelo principal y Gro
 
 Honcho funciona como memoria externa dentro del mismo stack de Hermes. El stack levanta `honcho-api`, `honcho-deriver`, `honcho-db` con pgvector y `honcho-redis`; la API queda ligada a `127.0.0.1:8000` para debug local y Hermes accede por la red interna en `http://honcho-api:8000`. Hermes tiene `memory.provider=honcho`, workspace `homelab`, usuario `Sergio`, AI peer `Jared`, modo `hybrid` y escritura `async`. La configuracion inicial usa Groq como endpoint OpenAI-compatible para las tareas LLM y `HONCHO_EMBED_MESSAGES=false` para no necesitar embeddings de pago en v1. Si se quiere memoria semantica completa, anadir despues embeddings locales mediante Ollama/LiteLLM o un proveedor externo barato.
 
+MCPs activos en Hermes: `homeassistant_mcp` apunta a `http://host.docker.internal:8123/api/mcp` y `n8n` apunta a `http://host.docker.internal:5678/mcp-server/http`. Sus tokens viven en el `.env` persistente ignorado de Hermes. Telegram tiene permitidos `todo`, `memory`, `homeassistant`, `messaging`, `homeassistant_mcp` y `n8n`.
+
 Preparacion local:
 
 ```bash
