@@ -10,7 +10,7 @@ Hermes is the Telegram-first personal butler for this homelab. It runs as a norm
 
 Current runtime model setup: OpenAI Codex `gpt-5.5` is the primary model and Groq `llama-3.3-70b-versatile` is the fallback. Telegram should keep lightweight toolsets only (`todo`, `memory`, `homeassistant`, `messaging`) so normal messages do not trigger oversized provider payloads.
 
-Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes can reach it inside the stack network as `http://honcho-api:8000`.
+Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes reaches it inside the stack network as `http://honcho-api:8000`. Runtime status: Hermes has `memory.provider=honcho`, workspace `homelab`, user peer `Sergio`, AI peer `Jared`, `hybrid` recall, and `async` writes.
 
 Do not expose Hermes with Tailscale Funnel or public HTTPS until its auth, approval, memory, and tool permissions have been reviewed.
 
@@ -63,6 +63,13 @@ Use self-hosted Honcho URL:
 
 ```text
 http://honcho-api:8000
+```
+
+Validation:
+
+```bash
+docker exec hermes sh -lc 'cd /opt/hermes && . .venv/bin/activate && ./hermes memory status'
+docker exec hermes sh -lc 'cd /opt/hermes && . .venv/bin/activate && ./hermes doctor'
 ```
 
 ## Deployment
