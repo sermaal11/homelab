@@ -115,7 +115,7 @@ Un `405 Method Not Allowed` en `GET /api/mcp` indica que la integracion esta con
 
 ## Hermes Agent
 
-Hermes es el mayordomo personal Telegram-first del homelab. Se despliega como stack propio desde `hermes/docker-compose.yml`, usa la imagen oficial `nousresearch/hermes-agent:latest`, persiste todo su estado bajo `/data/homelab/hermes/data` y expone solo LAN/Tailscale:
+Hermes es el mayordomo personal Telegram-first del homelab. Se despliega como stack propio desde `hermes/docker-compose.yml`, construye una imagen local basada en `nousresearch/hermes-agent:latest` con `honcho-ai` instalado, persiste todo su estado bajo `/data/homelab/hermes/data` y expone solo LAN/Tailscale:
 
 - Gateway/API: `http://homelab:8642`
 - Dashboard: `http://homelab:9119`

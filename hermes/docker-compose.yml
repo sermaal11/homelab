@@ -1,7 +1,10 @@
 services:
   hermes:
     container_name: hermes
-    image: nousresearch/hermes-agent:latest
+    image: homelab/hermes-agent:honcho
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     command: gateway run
     ports:

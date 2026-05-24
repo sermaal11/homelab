@@ -1,6 +1,6 @@
 # Hermes Agent
 
-Hermes is the Telegram-first personal butler for this homelab. It runs as a normal Portainer/GitHub stack, keeps all agent state under `/data/homelab/hermes/data`, and is exposed only on LAN/Tailscale.
+Hermes is the Telegram-first personal butler for this homelab. It runs as a normal Portainer/GitHub stack, keeps all agent state under `/data/homelab/hermes/data`, and is exposed only on LAN/Tailscale. The local Hermes image extends `nousresearch/hermes-agent:latest` with `honcho-ai` so the bundled Honcho memory plugin works after redeploys.
 
 ## Access
 
