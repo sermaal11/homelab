@@ -77,6 +77,7 @@ Validation:
 ```bash
 docker exec hermes sh -lc 'cd /opt/hermes && . .venv/bin/activate && ./hermes memory status'
 docker exec hermes sh -lc 'cd /opt/hermes && . .venv/bin/activate && ./hermes doctor'
+scripts/honcho-inspect.sh
 ```
 
 ## Deployment

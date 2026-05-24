@@ -127,6 +127,12 @@ Honcho funciona como memoria externa dentro del mismo stack de Hermes. El stack 
 
 MCPs activos en Hermes: `homeassistant_mcp` apunta a `http://host.docker.internal:8123/api/mcp` y `n8n` apunta a `http://host.docker.internal:5678/mcp-server/http`. Sus tokens viven en el `.env` persistente ignorado de Hermes. Telegram tiene permitidos `todo`, `memory`, `homeassistant`, `messaging`, `homeassistant_mcp` y `n8n`.
 
+Para inspeccionar lo que Honcho esta recibiendo y guardando:
+
+```bash
+scripts/honcho-inspect.sh
+```
+
 Preparacion local:
 
 ```bash
