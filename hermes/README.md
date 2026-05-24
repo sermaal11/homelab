@@ -10,6 +10,8 @@ Hermes is the Telegram-first personal butler for this homelab. It runs as a norm
 
 Current runtime model setup: OpenAI Codex `gpt-5.5` is the primary model and Groq `llama-3.3-70b-versatile` is the fallback. Telegram should keep lightweight toolsets only (`todo`, `memory`, `homeassistant`, `messaging`) so normal messages do not trigger oversized provider payloads.
 
+Honcho memory is prepared as an optional sidecar group inside this same Compose stack. It is disabled unless `COMPOSE_PROFILES=honcho` or `--profile honcho` is used. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes can reach it inside the stack network as `http://honcho-api:8000`.
+
 Do not expose Hermes with Tailscale Funnel or public HTTPS until its auth, approval, memory, and tool permissions have been reviewed.
 
 ## Preparation
@@ -29,6 +31,43 @@ openssl rand -hex 32
 Only `HERMES_API_SERVER_KEY` is required for the container to render its compose config. Model provider, Telegram, Home Assistant, and Grafana credentials can be configured inside Hermes after the first boot. If you prefer env-based setup, fill `OPENROUTER_API_KEY` or `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, and `HOMEASSISTANT_TOKEN` before deploying.
 
 Hermes can also be authenticated/configured from its dashboard or CLI after the persistent data directory exists. This is the preferred path when no OpenAI/OpenRouter key is available yet.
+
+## Honcho Memory
+
+Honcho is optional and runs inside the Hermes stack as:
+
+- `honcho-api`
+- `honcho-deriver`
+- `honcho-db`
+- `honcho-redis`
+
+The stack builds Honcho from the upstream Git repository because upstream documents that there is no pre-built Docker Hub image. Activate it only after adding a real `GROQ_API_KEY` and a strong `HONCHO_POSTGRES_PASSWORD` to `hermes/.env`:
+
+```bash
+COMPOSE_PROFILES=honcho
+```
+
+Initial no-paid-embeddings mode:
+
+```bash
+HONCHO_OPENAI_BASE_URL=https://api.groq.com/openai/v1
+HONCHO_GROQ_MODEL=llama-3.3-70b-versatile
+HONCHO_EMBED_MESSAGES=false
+```
+
+This lets Honcho use Groq for LLM work without requiring an embedding provider. Semantic vector search can be enabled later by adding local embeddings through Ollama/LiteLLM or a low-cost embedding provider, then setting `HONCHO_EMBED_MESSAGES=true`.
+
+After Honcho is healthy, configure Hermes external memory from inside the Hermes container:
+
+```bash
+docker exec -it hermes sh -lc 'cd /opt/hermes && . .venv/bin/activate && ./hermes memory setup'
+```
+
+Use self-hosted Honcho URL:
+
+```text
+http://honcho-api:8000
+```
 
 ## Deployment
 

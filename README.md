@@ -123,6 +123,8 @@ Hermes es el mayordomo personal Telegram-first del homelab. Se despliega como st
 
 Estado actual: Hermes usa OpenAI Codex con `gpt-5.5` como modelo principal y Groq `llama-3.3-70b-versatile` como fallback. Telegram queda limitado a toolsets ligeros (`todo`, `memory`, `homeassistant`, `messaging`) para evitar payloads demasiado grandes en conversaciones normales.
 
+Honcho queda preparado como memoria externa opcional dentro del mismo stack de Hermes mediante el perfil Compose `honcho`. Al activarlo levanta `honcho-api`, `honcho-deriver`, `honcho-db` con pgvector y `honcho-redis`; la API queda ligada a `127.0.0.1:8000` para debug local y Hermes puede acceder por la red interna del stack. La configuracion inicial usa Groq como endpoint OpenAI-compatible para las tareas LLM y `HONCHO_EMBED_MESSAGES=false` para no necesitar embeddings de pago en v1. Si se quiere memoria semantica completa, anadir despues embeddings locales mediante Ollama/LiteLLM o un proveedor externo barato.
+
 Preparacion local:
 
 ```bash
@@ -211,7 +213,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
 | n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE` |
-| Hermes Agent | `HERMES_GATEWAY_PORT`, `HERMES_DASHBOARD_PORT`, `HERMES_DATA_DIR`, `HERMES_API_SERVER_KEY`; opcionales `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `HOMEASSISTANT_TOKEN`, `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN` |
+| Hermes Agent | `HERMES_GATEWAY_PORT`, `HERMES_DASHBOARD_PORT`, `HERMES_DATA_DIR`, `HERMES_API_SERVER_KEY`; opcionales `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `HOMEASSISTANT_TOKEN`, `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`; Honcho opcional con `COMPOSE_PROFILES=honcho`, `HONCHO_*` |
 | Nextcloud | `NEXTCLOUD_HTTP_PORT`, `NEXTCLOUD_TRUSTED_DOMAINS`, `NEXTCLOUD_OVERWRITEHOST`, `NEXTCLOUD_OVERWRITEPROTOCOL`, `NEXTCLOUD_DB_NAME`, `NEXTCLOUD_DB_USER`, `NEXTCLOUD_DB_PASSWORD`, `NEXTCLOUD_HTML_DIR`, `NEXTCLOUD_DB_DIR` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |
@@ -320,6 +322,7 @@ test -n "$(grep '^HERMES_API_SERVER_KEY=' hermes/.env | cut -d= -f2-)"
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml ps
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml logs -f
 docker exec hermes sh -lc 'cd /opt/hermes && . .venv/bin/activate && ./hermes status'
+docker compose --profile honcho --env-file hermes/.env -f hermes/docker-compose.yml config
 ```
 
 Prometheus:
