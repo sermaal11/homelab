@@ -63,6 +63,7 @@ hermes/.env
 hermes/data/
 hermes/honcho/postgres/
 hermes/honcho/redis/
+hermes/honcho/ollama/
 
 # Nextcloud local config and persisted data
 nextcloud/.env

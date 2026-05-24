@@ -47,6 +47,7 @@ Honcho is optional and runs inside the Hermes stack as:
 - `honcho-deriver`
 - `honcho-db`
 - `honcho-redis`
+- `honcho-ollama`
 
 The stack builds Honcho from the upstream Git repository because upstream documents that there is no pre-built Docker Hub image. Add a real `GROQ_API_KEY` and a strong `HONCHO_POSTGRES_PASSWORD` to `hermes/.env` before deploying.
 
@@ -54,11 +55,14 @@ Initial no-paid-embeddings mode:
 
 ```bash
 HONCHO_OPENAI_BASE_URL=https://api.groq.com/openai/v1
-HONCHO_GROQ_MODEL=llama-3.3-70b-versatile
+HONCHO_GROQ_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
 HONCHO_EMBED_MESSAGES=false
+HONCHO_EMBEDDING_MODEL=nomic-embed-text
+HONCHO_EMBEDDING_BASE_URL=http://honcho-ollama:11434/v1
+HONCHO_EMBEDDING_VECTOR_DIMENSIONS=768
 ```
 
-This lets Honcho use Groq for LLM work without requiring an embedding provider. Semantic vector search can be enabled later by adding local embeddings through Ollama/LiteLLM or a low-cost embedding provider, then setting `HONCHO_EMBED_MESSAGES=true`.
+This lets Honcho use Groq for structured LLM work and local Ollama embeddings for persisted observations without paying an embedding provider.
 
 After Honcho is healthy, configure Hermes external memory from inside the Hermes container:
 
