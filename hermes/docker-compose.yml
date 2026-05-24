@@ -33,8 +33,6 @@ services:
 
   honcho-api:
     container_name: honcho-api
-    profiles:
-      - honcho
     build:
       context: https://github.com/plastic-labs/honcho.git#${HONCHO_GIT_REF:-main}
       dockerfile: Dockerfile
@@ -101,8 +99,6 @@ services:
 
   honcho-deriver:
     container_name: honcho-deriver
-    profiles:
-      - honcho
     build:
       context: https://github.com/plastic-labs/honcho.git#${HONCHO_GIT_REF:-main}
       dockerfile: Dockerfile
@@ -122,8 +118,6 @@ services:
 
   honcho-db:
     container_name: honcho-db
-    profiles:
-      - honcho
     image: pgvector/pgvector:pg15
     restart: unless-stopped
     command: ["postgres", "-c", "max_connections=200"]
@@ -145,8 +139,6 @@ services:
 
   honcho-redis:
     container_name: honcho-redis
-    profiles:
-      - honcho
     image: redis:8.2
     restart: unless-stopped
     volumes:

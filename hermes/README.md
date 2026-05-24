@@ -10,7 +10,7 @@ Hermes is the Telegram-first personal butler for this homelab. It runs as a norm
 
 Current runtime model setup: OpenAI Codex `gpt-5.5` is the primary model and Groq `llama-3.3-70b-versatile` is the fallback. Telegram should keep lightweight toolsets only (`todo`, `memory`, `homeassistant`, `messaging`) so normal messages do not trigger oversized provider payloads.
 
-Honcho memory is prepared as an optional sidecar group inside this same Compose stack. It is disabled unless `COMPOSE_PROFILES=honcho` or `--profile honcho` is used. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes can reach it inside the stack network as `http://honcho-api:8000`.
+Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes can reach it inside the stack network as `http://honcho-api:8000`.
 
 Do not expose Hermes with Tailscale Funnel or public HTTPS until its auth, approval, memory, and tool permissions have been reviewed.
 
@@ -41,11 +41,7 @@ Honcho is optional and runs inside the Hermes stack as:
 - `honcho-db`
 - `honcho-redis`
 
-The stack builds Honcho from the upstream Git repository because upstream documents that there is no pre-built Docker Hub image. Activate it only after adding a real `GROQ_API_KEY` and a strong `HONCHO_POSTGRES_PASSWORD` to `hermes/.env`:
-
-```bash
-COMPOSE_PROFILES=honcho
-```
+The stack builds Honcho from the upstream Git repository because upstream documents that there is no pre-built Docker Hub image. Add a real `GROQ_API_KEY` and a strong `HONCHO_POSTGRES_PASSWORD` to `hermes/.env` before deploying.
 
 Initial no-paid-embeddings mode:
 
