@@ -8,6 +8,8 @@ Hermes is the Telegram-first personal butler for this homelab. It runs as a norm
 - Dashboard: `http://homelab:9119`
 - Telegram: polling mode through `TELEGRAM_BOT_TOKEN`
 
+Current runtime model setup: OpenAI Codex `gpt-5.5` is the primary model and Groq `llama-3.3-70b-versatile` is the fallback. Telegram should keep lightweight toolsets only (`todo`, `memory`, `homeassistant`, `messaging`) so normal messages do not trigger oversized provider payloads.
+
 Do not expose Hermes with Tailscale Funnel or public HTTPS until its auth, approval, memory, and tool permissions have been reviewed.
 
 ## Preparation

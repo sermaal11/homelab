@@ -121,6 +121,8 @@ Hermes es el mayordomo personal Telegram-first del homelab. Se despliega como st
 - Dashboard: `http://homelab:9119`
 - Telegram: polling mediante `TELEGRAM_BOT_TOKEN`
 
+Estado actual: Hermes usa OpenAI Codex con `gpt-5.5` como modelo principal y Groq `llama-3.3-70b-versatile` como fallback. Telegram queda limitado a toolsets ligeros (`todo`, `memory`, `homeassistant`, `messaging`) para evitar payloads demasiado grandes en conversaciones normales.
+
 Preparacion local:
 
 ```bash
@@ -317,6 +319,7 @@ Hermes Agent:
 test -n "$(grep '^HERMES_API_SERVER_KEY=' hermes/.env | cut -d= -f2-)"
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml ps
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml logs -f
+docker exec hermes sh -lc 'cd /opt/hermes && . .venv/bin/activate && ./hermes status'
 ```
 
 Prometheus:
