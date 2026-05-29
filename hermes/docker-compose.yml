@@ -16,22 +16,30 @@ services:
       HERMES_DASHBOARD: "1"
       HERMES_DASHBOARD_HOST: 0.0.0.0
       HERMES_DASHBOARD_PORT: "9119"
+      HERMES_MODEL: ${HERMES_MODEL:-gpt-5.5}
       API_SERVER_ENABLED: "true"
       API_SERVER_HOST: 0.0.0.0
       API_SERVER_KEY: ${HERMES_API_SERVER_KEY:?Set HERMES_API_SERVER_KEY in hermes/.env}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
       TELEGRAM_HOME_CHANNEL: ${TELEGRAM_HOME_CHANNEL:-}
-      HOMEASSISTANT_TOKEN: ${HOMEASSISTANT_TOKEN:-}
+      HONCHO_BASE_URL: ${HONCHO_BASE_URL:-http://honcho-api:8000}
+      HERMES_SELF_URL: ${HERMES_SELF_URL:-http://localhost:8642}
+      HOMEASSISTANT_URL: ${HOMEASSISTANT_URL:-http://host.docker.internal:8123}
+      N8N_URL: ${N8N_URL:-http://n8n:5678}
+      NEXTCLOUD_URL: ${NEXTCLOUD_URL:-http://nextcloud}
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-http://prometheus:9090}
       GRAFANA_URL: ${GRAFANA_URL:-http://grafana:3000}
-      GRAFANA_SERVICE_ACCOUNT_TOKEN: ${GRAFANA_SERVICE_ACCOUNT_TOKEN:-}
       TZ: ${TZ:-Europe/Madrid}
     volumes:
       - ${HERMES_DATA_DIR:-/data/homelab/hermes/data}:/opt/data
     networks:
       - default
+      - n8n
+      - nextcloud
       - server-monitoring
 
   honcho-api:
@@ -40,7 +48,17 @@ services:
       context: https://github.com/plastic-labs/honcho.git#${HONCHO_GIT_REF:-main}
       dockerfile: Dockerfile
     restart: unless-stopped
-    entrypoint: ["sh", "docker/entrypoint.sh"]
+    entrypoint:
+      - sh
+      - -lc
+      - |
+        set -e
+        echo "Running database migrations..."
+        /app/.venv/bin/python scripts/provision_db.py
+        echo "Configuring embedding dimensions..."
+        /app/.venv/bin/python scripts/configure_embeddings.py --yes
+        echo "Starting API server..."
+        exec /app/.venv/bin/fastapi run --host 0.0.0.0 src/main.py
     depends_on:
       honcho-db:
         condition: service_healthy
@@ -186,4 +204,10 @@ services:
 networks:
   server-monitoring:
     name: server-monitoring
+    external: true
+  n8n:
+    name: n8n_default
+    external: true
+  nextcloud:
+    name: nextcloud_default
     external: true

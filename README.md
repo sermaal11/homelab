@@ -115,17 +115,17 @@ Un `405 Method Not Allowed` en `GET /api/mcp` indica que la integracion esta con
 
 ## Hermes Agent
 
-Hermes es el mayordomo personal Telegram-first del homelab. Se despliega como stack propio desde `hermes/docker-compose.yml`, construye una imagen local basada en `nousresearch/hermes-agent:latest` con `honcho-ai` instalado, persiste todo su estado bajo `/data/homelab/hermes/data` y expone solo LAN/Tailscale:
+Hermes es el mayordomo personal Telegram-first del homelab. Se despliega como stack propio desde `hermes/docker-compose.yml`, construye una imagen casi vanilla basada en `nousresearch/hermes-agent:latest` con solo `honcho-ai` añadido para memoria, persiste todo su estado bajo `/data/homelab/hermes/data` y expone solo LAN/Tailscale:
 
 - Gateway/API: `http://homelab:8642`
 - Dashboard: `http://homelab:9119`
 - Telegram: polling mediante `TELEGRAM_BOT_TOKEN`
 
-Estado actual: Hermes usa OpenAI Codex con `gpt-5.5` como modelo principal y Groq `llama-3.3-70b-versatile` como fallback. Telegram queda limitado a toolsets ligeros (`todo`, `memory`, `homeassistant`, `messaging`) para evitar payloads demasiado grandes en conversaciones normales.
+Estado objetivo tras la reinstalacion limpia: Hermes usa `gpt-5.5` como modelo principal y Groq como fallback. No se preconfiguran MCPs de Codex dentro de Hermes; Hermes solo recibe conectividad de red y URLs internas para que desarrolle sus propias skills/herramientas.
 
-Honcho funciona como memoria externa dentro del mismo stack de Hermes. El stack levanta `honcho-api`, `honcho-deriver`, `honcho-db` con pgvector, `honcho-redis` y `honcho-ollama` para embeddings locales. La API queda ligada a `127.0.0.1:8000` para debug local y Hermes accede por la red interna en `http://honcho-api:8000`. Hermes tiene `memory.provider=honcho`, workspace `homelab`, usuario `Sergio`, AI peer `Jared`, modo `hybrid` y escritura `async`. La configuracion inicial usa Groq como endpoint OpenAI-compatible para las tareas LLM con `meta-llama/llama-4-scout-17b-16e-instruct`, porque soporta `json_schema`, y Ollama local con `nomic-embed-text` para embeddings sin pagar proveedor externo.
+Honcho funciona como memoria externa dentro del mismo stack de Hermes. El stack levanta `honcho-api`, `honcho-deriver`, `honcho-db` con pgvector, `honcho-redis` y `honcho-ollama` para embeddings locales. La API queda ligada a `127.0.0.1:8000` para debug local y Hermes accede por la red interna en `http://honcho-api:8000`. Honcho usa Groq como endpoint OpenAI-compatible para las tareas LLM con `meta-llama/llama-4-scout-17b-16e-instruct`, porque soporta `json_schema`, y Ollama local con `nomic-embed-text` para embeddings sin pagar proveedor externo.
 
-MCPs activos en Hermes: `homeassistant_mcp` apunta a `http://host.docker.internal:8123/api/mcp` y `n8n` apunta a `http://host.docker.internal:5678/mcp-server/http`. Sus tokens viven en el `.env` persistente ignorado de Hermes. Telegram tiene permitidos `todo`, `memory`, `homeassistant`, `messaging`, `homeassistant_mcp` y `n8n`.
+Acceso de red para futuras skills propias de Hermes: Home Assistant por `http://host.docker.internal:8123`, n8n por `http://n8n:5678`, Nextcloud por `http://nextcloud`, Prometheus por `http://prometheus:9090` y Grafana por `http://grafana:3000`. Esto no concede tokens ni MCPs compartidos.
 
 Para inspeccionar lo que Honcho esta recibiendo y guardando:
 
@@ -140,9 +140,9 @@ cp hermes/.env.example hermes/.env
 openssl rand -hex 32
 ```
 
-Guardar el valor generado como `HERMES_API_SERVER_KEY`. El contenedor puede arrancar sin API key de OpenAI/OpenRouter; el modelo, Telegram, Home Assistant y Grafana se pueden configurar despues desde Hermes/dashboard/CLI o, si se prefiere, rellenando `hermes/.env` antes del despliegue.
+Guardar el valor generado como `HERMES_API_SERVER_KEY`. El contenedor puede arrancar sin API key de OpenAI/OpenRouter; el modelo, Telegram y las futuras skills se pueden configurar despues desde Hermes/dashboard/CLI o, si se prefiere, rellenando `hermes/.env` antes del despliegue.
 
-El contenedor no monta `/var/run/docker.sock` y no ve `/data/homelab` directamente. Su scope de ficheros inicial es su propio workspace persistente bajo `hermes/data`. Las plantillas iniciales de identidad, memoria y MCP viven en `hermes/bootstrap/`; despues del primer arranque se copian a `hermes/data` y se ajustan desde el dashboard si Hermes cambia su formato.
+El contenedor no monta `/var/run/docker.sock`, no ve `/data/homelab` directamente y no recibe MCPs de Codex. Su scope de ficheros inicial es su propio workspace persistente bajo `hermes/data`.
 
 Reglas de seguridad del mayordomo:
 
@@ -221,7 +221,7 @@ docker compose --env-file portainer/.env -f portainer/docker-compose.yml up -d
 | Monitoring | `PROMETHEUS_PORT`, `NODE_EXPORTER_PORT`, `GRAFANA_PORT`, `PROMETHEUS_DATA_DIR`, `GRAFANA_DATA_DIR`, `BLACKBOX_CONFIG_FILE` |
 | Grafana MCP | `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`, `GRAFANA_MCP_IMAGE`, `GRAFANA_MCP_NETWORK` |
 | n8n | `N8N_PORT`, `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`, `N8N_DATA_DIR`, `N8N_FILES_DIR`, `N8N_ENCRYPTION_KEY`, `N8N_SECURE_COOKIE` |
-| Hermes Agent | `HERMES_GATEWAY_PORT`, `HERMES_DASHBOARD_PORT`, `HERMES_DATA_DIR`, `HERMES_API_SERVER_KEY`; opcionales `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `HOMEASSISTANT_TOKEN`, `GRAFANA_URL`, `GRAFANA_SERVICE_ACCOUNT_TOKEN`; Honcho con `HONCHO_*` |
+| Hermes Agent | `HERMES_GATEWAY_PORT`, `HERMES_DASHBOARD_PORT`, `HERMES_DATA_DIR`, `HERMES_API_SERVER_KEY`, `HERMES_MODEL`; opcionales `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`; URLs internas `HONCHO_BASE_URL`, `HOMEASSISTANT_URL`, `N8N_URL`, `NEXTCLOUD_URL`, `PROMETHEUS_URL`, `GRAFANA_URL`; Honcho con `HONCHO_*` |
 | Nextcloud | `NEXTCLOUD_HTTP_PORT`, `NEXTCLOUD_TRUSTED_DOMAINS`, `NEXTCLOUD_OVERWRITEHOST`, `NEXTCLOUD_OVERWRITEPROTOCOL`, `NEXTCLOUD_DB_NAME`, `NEXTCLOUD_DB_USER`, `NEXTCLOUD_DB_PASSWORD`, `NEXTCLOUD_HTML_DIR`, `NEXTCLOUD_DB_DIR` |
 | Passbolt | `PASSBOLT_BASE_URL`, `PASSBOLT_DB_PASSWORD`, `PASSBOLT_DB_DIR`, `PASSBOLT_GPG_DIR`, `PASSBOLT_JWT_DIR` |
 | Portainer | `PORTAINER_HTTPS_PORT`, `PORTAINER_DATA_DIR` |

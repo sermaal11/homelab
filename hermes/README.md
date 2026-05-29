@@ -1,6 +1,6 @@
 # Hermes Agent
 
-Hermes is the Telegram-first personal butler for this homelab. It runs as a normal Portainer/GitHub stack, keeps all agent state under `/data/homelab/hermes/data`, and is exposed only on LAN/Tailscale. The local Hermes image extends `nousresearch/hermes-agent:latest` with `honcho-ai` so the bundled Honcho memory plugin works after redeploys.
+Hermes is the Telegram-first personal butler for this homelab. It runs as a normal Portainer/GitHub stack, keeps all agent state under `/data/homelab/hermes/data`, and is exposed only on LAN/Tailscale. The local Hermes image stays close to `nousresearch/hermes-agent:latest` and only adds `honcho-ai` so self-hosted Honcho memory works after redeploys.
 
 ## Access
 
@@ -8,16 +8,17 @@ Hermes is the Telegram-first personal butler for this homelab. It runs as a norm
 - Dashboard: `http://homelab:9119`
 - Telegram: polling mode through `TELEGRAM_BOT_TOKEN`
 
-Current runtime model setup: OpenAI Codex `gpt-5.5` is the primary model and Groq `llama-3.3-70b-versatile` is the fallback. Telegram should keep lightweight toolsets only (`todo`, `memory`, `homeassistant`, `messaging`) so normal messages do not trigger oversized provider payloads.
+Target runtime model setup after the clean reinstall: `gpt-5.5` as the primary model and Groq as fallback.
 
-Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes reaches it inside the stack network as `http://honcho-api:8000`. Runtime status: Hermes has `memory.provider=honcho`, workspace `homelab`, user peer `Sergio`, AI peer `Jared`, `hybrid` recall, and `async` writes.
+Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes reaches it inside the stack network as `http://honcho-api:8000`.
 
-Active MCP servers:
+No Codex MCP servers are preconfigured inside Hermes. Hermes gets only network reachability and URL hints so it can develop its own skills/tools:
 
-- `homeassistant_mcp`: `http://host.docker.internal:8123/api/mcp`
-- `n8n`: `http://host.docker.internal:5678/mcp-server/http`
-
-Their bearer tokens are stored only in the ignored persistent Hermes `.env`. Telegram currently allows the lightweight core toolsets plus these two MCP servers.
+- Home Assistant: `http://host.docker.internal:8123`
+- n8n: `http://n8n:5678`
+- Nextcloud: `http://nextcloud`
+- Prometheus: `http://prometheus:9090`
+- Grafana: `http://grafana:3000`
 
 Do not expose Hermes with Tailscale Funnel or public HTTPS until its auth, approval, memory, and tool permissions have been reviewed.
 
@@ -35,7 +36,7 @@ Generate the gateway API key:
 openssl rand -hex 32
 ```
 
-Only `HERMES_API_SERVER_KEY` is required for the container to render its compose config. Model provider, Telegram, Home Assistant, and Grafana credentials can be configured inside Hermes after the first boot. If you prefer env-based setup, fill `OPENROUTER_API_KEY` or `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, and `HOMEASSISTANT_TOKEN` before deploying.
+Only `HERMES_API_SERVER_KEY` is required for the container to render its compose config. Model provider and Telegram can be configured inside Hermes after the first boot. If you prefer env-based setup, fill `OPENROUTER_API_KEY` or `OPENAI_API_KEY`, `GROQ_API_KEY`, `TELEGRAM_BOT_TOKEN`, and `TELEGRAM_ALLOWED_USERS` before deploying.
 
 Hermes can also be authenticated/configured from its dashboard or CLI after the persistent data directory exists. This is the preferred path when no OpenAI/OpenRouter key is available yet.
 
@@ -102,25 +103,27 @@ docker compose --env-file hermes/.env -f hermes/docker-compose.yml ps
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml logs -f
 ```
 
-## First Boot
+## TUI
 
-After the container creates `/data/homelab/hermes/data`, copy the tracked starter files into the persistent data directory and adjust them from the dashboard if Hermes rewrites its config format:
+Use the helper script from the host:
 
 ```bash
-cp hermes/bootstrap/SOUL.md hermes/data/SOUL.md
-mkdir -p hermes/data/memories
-cp hermes/bootstrap/USER.md hermes/data/memories/USER.md
+scripts/hermes-tui.sh
 ```
 
-Use `hermes/bootstrap/config.mcp.yaml` as the reference for MCP targets:
+The local shell alias is:
 
-- Home Assistant MCP: `http://host.docker.internal:8123/api/mcp`
-- Prometheus: `http://prometheus:9090`
-- Grafana: `http://grafana:3000`
+```bash
+alias hermes-tui='/data/homelab/scripts/hermes-tui.sh'
+```
+
+## Clean Reinstall
+
+For a clean Hermes runtime without deleting Honcho memory, stop the stack, move `/data/homelab/hermes/data` aside, and redeploy. Keep `/data/homelab/hermes/honcho/*` intact.
 
 ## Security Rules
 
-Hermes v1 must not mount `/var/run/docker.sock` and must not see `/data/homelab` directly. Its writable filesystem scope is its own persistent data/workspace under `/data/homelab/hermes/data`.
+Hermes v1 must not mount `/var/run/docker.sock`, must not see `/data/homelab` directly, and must not inherit Codex MCP tokens. Its writable filesystem scope is its own persistent data/workspace under `/data/homelab/hermes/data`.
 
 Allowed without asking:
 
