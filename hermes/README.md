@@ -10,6 +10,8 @@ Hermes is the Telegram-first personal butler for this homelab. It runs as a norm
 
 Target runtime model setup after the clean reinstall: OpenAI Codex OAuth with `gpt-5.5` as the primary model. No fallback provider is configured while Codex is being validated.
 
+The dashboard is intentionally configured with `HERMES_DASHBOARD_INSECURE=1` because it is exposed only on trusted LAN/Tailscale. Do not publish it to the Internet in this mode.
+
 Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes reaches it inside the stack network as `http://honcho-api:8000`.
 
 No Codex MCP servers are preconfigured inside Hermes. Hermes gets only network reachability and URL hints so it can develop its own skills/tools:
