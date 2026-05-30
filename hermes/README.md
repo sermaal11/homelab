@@ -1,6 +1,6 @@
 # Hermes Agent
 
-Hermes is the Telegram-first personal butler for this homelab. It runs as a normal Portainer/GitHub stack, keeps all agent state under `/data/homelab/hermes/data`, and is exposed only on LAN/Tailscale. The local Hermes image stays close to `nousresearch/hermes-agent:latest` and only adds `honcho-ai` so self-hosted Honcho memory works after redeploys.
+Hermes is the Telegram-first personal butler for this homelab. It runs as a normal Portainer/GitHub stack, keeps all agent state under `/data/homelab/hermes/data`, and is exposed only on LAN/Tailscale. The local Hermes image stays close to `nousresearch/hermes-agent:latest`, adds `honcho-ai` for self-hosted Honcho memory, and applies a small Codex stream compatibility patch for the OpenAI Codex OAuth backend.
 
 ## Access
 
@@ -8,7 +8,7 @@ Hermes is the Telegram-first personal butler for this homelab. It runs as a norm
 - Dashboard: `http://homelab:9119`
 - Telegram: polling mode through `TELEGRAM_BOT_TOKEN`
 
-Target runtime model setup after the clean reinstall: `gpt-5.5` as the primary model and Groq as fallback.
+Target runtime model setup after the clean reinstall: OpenAI Codex OAuth with `gpt-5.5` as the primary model. No fallback provider is configured while Codex is being validated.
 
 Honcho memory runs as a sidecar group inside this same Compose stack. The Honcho API binds to `127.0.0.1:8000` by default, while Hermes reaches it inside the stack network as `http://honcho-api:8000`.
 
@@ -101,6 +101,26 @@ Local validation:
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml config
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml ps
 docker compose --env-file hermes/.env -f hermes/docker-compose.yml logs -f
+```
+
+## Codex OAuth Patch
+
+The Docker image runs `hermes/patches/patch_codex_stream.py` during build. It patches Hermes' `run_agent.py` so OpenAI Codex OAuth streams can recover when `chatgpt.com/backend-api/codex` sends valid text deltas and then a final frame with `response.output = null`, which otherwise causes openai-python to raise:
+
+```text
+TypeError: 'NoneType' object is not iterable
+```
+
+Validation from the running container:
+
+```bash
+docker exec --user hermes hermes /opt/hermes/.venv/bin/python /opt/hermes/hermes -z 'Responde solo: OK'
+```
+
+Expected output:
+
+```text
+OK
 ```
 
 ## TUI
